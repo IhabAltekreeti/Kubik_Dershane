@@ -1,0 +1,6 @@
+{
+  "name": "Kübik Dijital Akademi — LGS & YKS Akıllı Öğrenme Platformu",
+  "description": "Kübik Dershanesi hibrit ve yapay zeka destekli yeni nesil eğitim platformu. 8. Sınıf LGS ve 11. Sınıf YKS hazırlığı, öğrenci, öğretmen, veli ve yönetim sistemleri.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
