@@ -36,6 +36,7 @@ export interface LearningEvidenceSubmission {
   hintsUsedCount: number;
   aiTutorInteractionsCount: number;
   feedbackMessage: string;
+  isRepeatedAttempt?: boolean;
 }
 
 export interface StudentTopicMasteryRecord {
@@ -46,6 +47,8 @@ export interface StudentTopicMasteryRecord {
   currentMastery: number;
   totalSubmissions: number;
   correctSubmissions: number;
+  uniqueQuestionsSolved: number;
+  solvedQuestionIds: string[];
   status: 'needs_practice' | 'in_progress' | 'mastered';
   evidenceLog: LearningEvidenceSubmission[];
   ruleExplanation: string;
@@ -90,6 +93,8 @@ class StudentStore {
       currentMastery: 52,
       totalSubmissions: 0,
       correctSubmissions: 0,
+      uniqueQuestionsSolved: 0,
+      solvedQuestionIds: [],
       status: 'needs_practice',
       evidenceLog: [],
       ruleExplanation: 'Başlangıç deneme sınavı teşhis skoru: %52. Doğru çözülen her doğrulanmış soru kazanım skorunu artırır.'
@@ -104,18 +109,34 @@ class StudentStore {
       currentMastery: 55,
       totalSubmissions: 0,
       correctSubmissions: 0,
+      uniqueQuestionsSolved: 0,
+      solvedQuestionIds: [],
       status: 'needs_practice',
       evidenceLog: [],
       ruleExplanation: 'Başlangıç deneme sınavı teşhis skoru: %55.'
     });
 
-    // Load from disk if available
+    // Load from disk if available with safe backward-compatibility migration
     try {
       if (fs.existsSync(STORAGE_FILE)) {
         const raw = fs.readFileSync(STORAGE_FILE, 'utf-8');
         const parsed = JSON.parse(raw);
         for (const [key, value] of Object.entries(parsed)) {
-          this.masteryData.set(key, value as StudentTopicMasteryRecord);
+          const rec = value as StudentTopicMasteryRecord;
+          // Ensure solvedQuestionIds and uniqueQuestionsSolved exist
+          if (!Array.isArray(rec.solvedQuestionIds)) {
+            rec.solvedQuestionIds = Array.from(
+              new Set(
+                (rec.evidenceLog || [])
+                  .filter(e => e.isCorrect)
+                  .map(e => e.questionId)
+              )
+            );
+          }
+          if (typeof rec.uniqueQuestionsSolved !== 'number') {
+            rec.uniqueQuestionsSolved = rec.solvedQuestionIds.length;
+          }
+          this.masteryData.set(key, rec);
         }
       }
     } catch (err) {
@@ -154,22 +175,28 @@ class StudentStore {
         currentMastery: 50,
         totalSubmissions: 0,
         correctSubmissions: 0,
+        uniqueQuestionsSolved: 0,
+        solvedQuestionIds: [],
         status: 'needs_practice',
         evidenceLog: [],
         ruleExplanation: 'İlk başlangıç teşhis skoru: %50.'
       });
     }
-    return this.masteryData.get(key)!;
+    const rec = this.masteryData.get(key)!;
+    if (!Array.isArray(rec.solvedQuestionIds)) rec.solvedQuestionIds = [];
+    if (typeof rec.uniqueQuestionsSolved !== 'number') rec.uniqueQuestionsSolved = rec.solvedQuestionIds.length;
+    return rec;
   }
 
   /**
    * Deterministic Mastery Calculation Rule:
    * - One single question answer alone cannot imply complete mastery of a whole topic.
-   * - Correct answer with 0 hints: +6%
-   * - Correct answer with 1-2 hints: +4%
-   * - Correct answer with 3+ hints: +2%
+   * - Re-submitting the same already-solved question does NOT inflate mastery or unique count.
+   * - Correct answer for a NEW question with 0 hints: +6%
+   * - Correct answer for a NEW question with 1-2 hints: +4%
+   * - Correct answer for a NEW question with 3+ hints: +2%
    * - Incorrect answer: 0% increase, recorded in log.
-   * - Topic is only marked 'mastered' when currentMastery >= 85% AND at least 3 distinct verified questions are correct.
+   * - Topic is only marked 'mastered' when currentMastery >= 85% AND at least 3 distinct unique verified questions are correct.
    */
   public recordAnswerSubmission(
     studentId: string,
@@ -183,35 +210,49 @@ class StudentStore {
     updatedRecord: StudentTopicMasteryRecord;
     delta: number;
     explanation: string;
+    isRepeatedAttempt: boolean;
   } {
     const record = this.getTopicMastery(studentId, topicId);
     record.totalSubmissions += 1;
 
+    const isAlreadySolved = record.solvedQuestionIds.includes(questionId);
     let delta = 0;
     let explanation = '';
+    const isRepeatedAttempt = isAlreadySolved && isCorrect;
 
     if (isCorrect) {
       record.correctSubmissions += 1;
-      if (hintsUsedCount === 0) {
-        delta = 6;
-        explanation = 'Tebrikler! Soru hiç ipucu kullanılmadan doğrudan doğru çözüldü (+%6 kazanım artışı).';
-      } else if (hintsUsedCount <= 2) {
-        delta = 4;
-        explanation = `Tebrikler! Soru ${hintsUsedCount} pedagojik ipucu yardımıyla doğru çözüldü (+%4 kazanım artışı).`;
+
+      if (!isAlreadySolved) {
+        // First successful completion of this specific question
+        record.solvedQuestionIds.push(questionId);
+        record.uniqueQuestionsSolved = record.solvedQuestionIds.length;
+
+        if (hintsUsedCount === 0) {
+          delta = 6;
+          explanation = 'Tebrikler! Soru hiç ipucu kullanılmadan ilk kez doğru çözüldü (+%6 kazanım artışı).';
+        } else if (hintsUsedCount <= 2) {
+          delta = 4;
+          explanation = `Tebrikler! Soru ${hintsUsedCount} pedagojik ipucu yardımıyla ilk kez doğru çözüldü (+%4 kazanım artışı).`;
+        } else {
+          delta = 2;
+          explanation = `Soru tüm ipuçları incelenerek ilk kez doğru tamamlandı (+%2 kazanım artışı).`;
+        }
+        record.currentMastery = Math.min(100, record.currentMastery + delta);
       } else {
-        delta = 2;
-        explanation = `Soru tüm ipuçları incelenerek doğru tamamlandı (+%2 kazanım artışı).`;
+        // Re-submission of an already-solved question: No mastery inflation!
+        delta = 0;
+        explanation = 'Bu soru daha önce doğru olarak tamamlanmıştır. Tekrar çözümünüz kayıt altına alındı ancak mükerrer kazanım artışı uygulanmadı (+%0).';
       }
-      record.currentMastery = Math.min(100, record.currentMastery + delta);
     } else {
       delta = 0;
       explanation = 'Cevap doğru değil. Kazanım puanı artırılmadı. Konunun tam kavranması için Gemini Matematik Öğretmeni ile çözüm adımlarını inceleyiniz.';
     }
 
-    // Check status
-    if (record.currentMastery >= 85 && record.correctSubmissions >= 3) {
+    // Status is determined by mastery score AND unique verified questions solved
+    if (record.currentMastery >= 85 && record.uniqueQuestionsSolved >= 3) {
       record.status = 'mastered';
-    } else if (record.currentMastery > record.baselineMastery) {
+    } else if (record.uniqueQuestionsSolved > 0 || record.currentMastery > record.baselineMastery) {
       record.status = 'in_progress';
     } else {
       record.status = 'needs_practice';
@@ -226,18 +267,20 @@ class StudentStore {
       isCorrect,
       hintsUsedCount,
       aiTutorInteractionsCount,
-      feedbackMessage: explanation
+      feedbackMessage: explanation,
+      isRepeatedAttempt
     };
 
     record.evidenceLog.unshift(submission);
-    record.ruleExplanation = `Kayıtlı yanıtlar: ${record.correctSubmissions} doğru / ${record.totalSubmissions} toplam deneme. (Not: Tek bir soru konunun tümünü kazandırmaz; düzenli doğrulama gereklidir).`;
+    record.ruleExplanation = `Kayıtlı yanıtlar: ${record.uniqueQuestionsSolved} benzersiz soru kazanıldı (${record.correctSubmissions} doğru deneme / ${record.totalSubmissions} toplam deneme). (Not: Tek bir sorunun tekrar çözülmesi kazanım puanını mükerrer artırmaz; konunun kazanılması için en az 3 farklı soru gereklidir).`;
 
     this.persistToDisk();
 
     return {
       updatedRecord: record,
       delta,
-      explanation
+      explanation,
+      isRepeatedAttempt
     };
   }
 }

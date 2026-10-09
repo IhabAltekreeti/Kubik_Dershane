@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
-import { VERIFIED_MATHEMATICS_QUESTION_MEB_LGS } from './server/verifiedContent.js';
+import { VERIFIED_MATHEMATICS_QUESTION_MEB_LGS, getVerifiedQuestionForTrack } from './server/verifiedContent.js';
 import { studentStore, ALLOWLISTED_STUDENTS } from './server/studentStore.js';
 import { geminiTutorService } from './server/geminiTutorService.js';
 
@@ -45,15 +45,40 @@ app.get('/api/student/context', (req, res) => {
   res.json({
     student: trustedStudent,
     isDemoIdentity: true,
-    serverVerified: true
+    serverVerified: true,
+    securityNotice: 'DEMO UYARISI: studentId parametresi istemci kontrollü bir demo seçimidir. Bu aşamada gerçek JWT/oturum yetkilendirmesi uygulanmamıştır; yalnızca izinli listedeki profiller kabul edilmektedir.'
   });
 });
 
 // 3. Verified Mathematics Question Content
 // Returns question text, options and official attribution; answer key is kept on the server
+// Strictly verifies track: YKS students receive unsupported track status instead of mismatched LGS content!
 app.get('/api/content/verified-question', (req, res) => {
-  const q = VERIFIED_MATHEMATICS_QUESTION_MEB_LGS;
+  const studentId = req.query.studentId as string;
+  let track: 'LGS' | 'YKS' = (req.query.track as 'LGS' | 'YKS') || 'LGS';
+
+  if (studentId) {
+    const student = studentStore.getTrustedStudent(studentId);
+    if (student) {
+      track = student.track;
+    }
+  }
+
+  const q = getVerifiedQuestionForTrack(track);
+
+  if (!q) {
+    return res.json({
+      available: false,
+      question: null,
+      track,
+      grade: track === 'YKS' ? 11 : 8,
+      reason: 'unsupported_track',
+      message: `${track === 'YKS' ? '11. Sınıf YKS' : '8. Sınıf LGS'} parkuru için resmî kaynakça doğrulaması tamamlanmış soru kaydı bu aşamada bulunmamaktadır. LGS içeriği YKS öğrencisine sunulmaz.`
+    });
+  }
+
   res.json({
+    available: true,
     question: {
       id: q.id,
       grade: q.grade,
@@ -65,6 +90,8 @@ app.get('/api/content/verified-question', (req, res) => {
       sourceAttribution: q.sourceAttribution,
       sourceDocument: q.sourceDocument,
       sourceUrl: q.sourceUrl,
+      verificationStatus: q.verificationStatus,
+      provenanceNotes: q.provenanceNotes,
       questionText: q.questionText,
       options: q.options,
       pedagogicalHintsCount: q.pedagogicalHints.length,
@@ -76,12 +103,14 @@ app.get('/api/content/verified-question', (req, res) => {
 // 4. Topic Mastery & Progress (Persisted across reloads)
 app.get('/api/student/progress', (req, res) => {
   const studentId = (req.query.studentId as string) || 'std_lgs_801';
-  const topicId = (req.query.topicId as string) || 'top_lgs_uslu';
-
   const trustedStudent = studentStore.getTrustedStudent(studentId);
   if (!trustedStudent) {
     return res.status(404).json({ error: 'Öğrenci bulunamadı.' });
   }
+
+  // Default to student's relevant topic
+  const defaultTopic = trustedStudent.track === 'LGS' ? 'top_lgs_uslu' : 'top_yks_fonk';
+  const topicId = (req.query.topicId as string) || defaultTopic;
 
   const masteryRecord = studentStore.getTopicMastery(studentId, topicId);
   res.json({ progress: masteryRecord });
@@ -103,10 +132,12 @@ app.post('/api/student/answer', (req, res) => {
     return res.status(403).json({ error: 'Yetkisiz öğrenci kimliği.' });
   }
 
-  // Check against server-held verified answer key
-  const verifiedQ = VERIFIED_MATHEMATICS_QUESTION_MEB_LGS;
-  if (questionId !== verifiedQ.id) {
-    return res.status(400).json({ error: 'Bilinmeyen soru kimliği.' });
+  // Check track consistency: verify question belongs to student's track
+  const verifiedQ = getVerifiedQuestionForTrack(trustedStudent.track);
+  if (!verifiedQ || questionId !== verifiedQ.id) {
+    return res.status(400).json({ 
+      error: `Soru (${questionId}) öğrencinin parkuru (${trustedStudent.track}) için geçerli veya doğrulanmış değil.` 
+    });
   }
 
   const isCorrect = chosenOptionId === verifiedQ.verifiedAnswerKey;
@@ -127,6 +158,7 @@ app.post('/api/student/answer', (req, res) => {
     officialSolution: verifiedQ.verifiedOfficialSolution,
     delta: evaluation.delta,
     explanation: evaluation.explanation,
+    isRepeatedAttempt: evaluation.isRepeatedAttempt,
     updatedMastery: evaluation.updatedRecord
   });
 });
@@ -149,7 +181,13 @@ app.post('/api/tutor/chat', async (req, res) => {
     return res.status(403).json({ error: 'Yetkisiz öğrenci kimliği.' });
   }
 
-  const question = VERIFIED_MATHEMATICS_QUESTION_MEB_LGS;
+  const question = getVerifiedQuestionForTrack(trustedStudent.track);
+  if (!question) {
+    return res.status(400).json({
+      error: `${trustedStudent.grade}. Sınıf ${trustedStudent.track} parkuru için henüz doğrulanmış soru kaydı bulunmamaktadır. LGS içeriği YKS öğrencisine sunulamaz.`,
+      isRecoverable: false
+    });
+  }
 
   const response = await geminiTutorService.getTutorReply(
     trustedStudent,

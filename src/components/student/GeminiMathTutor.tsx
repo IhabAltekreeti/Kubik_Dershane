@@ -30,7 +30,9 @@ interface GeminiMathTutorProps {
   studentId: string;
   studentName: string;
   grade: number;
+  track: 'LGS' | 'YKS';
   onMasteryUpdated?: (newScore: number) => void;
+  onSwitchStudent?: (track: 'LGS' | 'YKS') => void;
 }
 
 interface ChatMessage {
@@ -44,9 +46,12 @@ export const GeminiMathTutor: React.FC<GeminiMathTutorProps> = ({
   studentId,
   studentName,
   grade,
-  onMasteryUpdated
+  track,
+  onMasteryUpdated,
+  onSwitchStudent
 }) => {
   const [question, setQuestion] = useState<VerifiedQuestionData | null>(null);
+  const [unavailableInfo, setUnavailableInfo] = useState<{ message: string; track: string } | null>(null);
   const [progress, setProgress] = useState<TopicProgressResponse | null>(null);
   const [isLoadingQuestion, setIsLoadingQuestion] = useState(true);
   const [serverHealth, setServerHealth] = useState<{ status: string; hasGeminiKey: boolean } | null>(null);
@@ -67,7 +72,7 @@ export const GeminiMathTutor: React.FC<GeminiMathTutorProps> = ({
 
   useEffect(() => {
     loadInitialData();
-  }, [studentId]);
+  }, [studentId, track]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -76,27 +81,48 @@ export const GeminiMathTutor: React.FC<GeminiMathTutorProps> = ({
   const loadInitialData = async () => {
     setIsLoadingQuestion(true);
     setAiError(null);
+    setSelectedOption(null);
+    setRevealedHints([]);
+    setSubmissionResult(null);
+
     try {
-      const [qData, healthData] = await Promise.all([
-        fetchVerifiedQuestion(),
+      const [qResp, healthData] = await Promise.all([
+        fetchVerifiedQuestion(studentId, track),
         fetchHealth()
       ]);
-      setQuestion(qData);
+
       setServerHealth(healthData);
 
-      // Load server-persisted topic progress
-      const pData = await fetchStudentProgress(studentId, 'top_lgs_uslu');
-      setProgress(pData);
+      if (!qResp.available || !qResp.question) {
+        setQuestion(null);
+        setUnavailableInfo({
+          message: qResp.message || `${grade}. Sınıf ${track} parkuru için henüz doğrulanmış soru kaydı bulunmamaktadır.`,
+          track: qResp.track || track
+        });
+        setProgress(null);
+        setMessages([]);
+      } else {
+        setQuestion(qResp.question);
+        setUnavailableInfo(null);
 
-      // Initial tutor welcome message
-      setMessages([
-        {
-          id: 'welcome_1',
-          role: 'assistant',
-          content: `Merhaba ${studentName}! Ben Kübik Matematik Öğretmenin. Bugün birlikte T.C. MEB LGS örnek sorusu üzerinden "Üslü İfadeler" konusunu ele alıyoruz. Soruyu dikkatle oku; aklına takılan herhangi bir adımda veya taban dönüşümünde bana dilediğin gibi danışabilirsin!`,
-          timestamp: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
-        }
-      ]);
+        // Load server-persisted topic progress for this student's topic
+        const topicId = qResp.question.topic === 'Üslü İfadeler' ? 'top_lgs_uslu' : 'top_yks_fonk';
+        const pData = await fetchStudentProgress(studentId, topicId);
+        setProgress(pData);
+
+        // Initial tutor welcome message tailored to this student's grade & track
+        const sourceLabel = qResp.question.verificationStatus === 'verified_official_publication'
+          ? `resmî ${qResp.question.sourceAttribution}`
+          : 'müfredat uyumlu içerik';
+        setMessages([
+          {
+            id: 'welcome_1',
+            role: 'assistant',
+            content: `Merhaba ${studentName}! Ben Kübik Matematik Öğretmenin. Bugün ${grade}. Sınıf (${track}) seviyesinde "${qResp.question.topic}" konusunu (${sourceLabel}) birlikte ele alıyoruz. Soruyu dikkatle oku; aklına takılan herhangi bir adımda bana dilediğin gibi danışabilirsin!`,
+            timestamp: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+          }
+        ]);
+      }
     } catch (err: any) {
       console.error('Failed to load tutor data:', err);
       setAiError(err.message || 'Veri yüklenirken bir hata oluştu.');
@@ -177,9 +203,10 @@ export const GeminiMathTutor: React.FC<GeminiMathTutorProps> = ({
     setAiError(null);
 
     try {
+      const topicId = question.topic === 'Üslü İfadeler' ? 'top_lgs_uslu' : 'top_yks_fonk';
       const result = await submitAnswer({
         studentId,
-        topicId: 'top_lgs_uslu',
+        topicId,
         questionId: question.id,
         chosenOptionId: selectedOption,
         hintsUsedCount: revealedHints.length,
@@ -194,9 +221,16 @@ export const GeminiMathTutor: React.FC<GeminiMathTutorProps> = ({
       }
 
       // Add tutor evaluation to chat
-      const evalMsg = result.isCorrect
-        ? `Tebrik ederim ${studentName}! Doğru seçenek ${result.verifiedAnswerKey}. ${result.explanation}`
-        : `Verdiğin cevap doğru değil. ${result.explanation} Doğru seçenek: ${result.verifiedAnswerKey}.`;
+      let evalMsg = '';
+      if (result.isCorrect) {
+        if (result.isRepeatedAttempt) {
+          evalMsg = `Tebrikler ${studentName}! Cevabın (${result.verifiedAnswerKey}) doğru. Not: Bu soruyu daha önce de başarıyla çözmüştün; tekrar denemen kaydedildi ancak mükerrer kazanım artışı uygulanmadı.`;
+        } else {
+          evalMsg = `Tebrik ederim ${studentName}! Doğru seçenek ${result.verifiedAnswerKey}. ${result.explanation}`;
+        }
+      } else {
+        evalMsg = `Verdiğin cevap doğru değil. ${result.explanation} Doğru seçenek: ${result.verifiedAnswerKey}.`;
+      }
 
       setMessages(prev => [
         ...prev,
@@ -225,8 +259,67 @@ export const GeminiMathTutor: React.FC<GeminiMathTutorProps> = ({
       <div className="bg-white rounded-xl border border-slate-200 p-8 text-center space-y-3">
         <div className="w-8 h-8 border-2 border-indigo-700 border-t-transparent rounded-full animate-spin mx-auto" />
         <p className="text-xs text-slate-600 font-medium">
-          Doğrulanmış MEB soru kaydı ve Gemini Öğretmen Köprüsü yükleniyor...
+          {grade}. Sınıf {track} doğrulanmış soru kaydı ve Gemini Öğretmen Köprüsü yükleniyor...
         </p>
+      </div>
+    );
+  }
+
+  // Unavailable content notice (Strict integrity rule: YKS students do not receive mismatched LGS content)
+  if (unavailableInfo) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 text-xs mb-1">
+                <span className="font-bold text-indigo-900 flex items-center gap-1.5">
+                  <BrainCircuit className="w-4 h-4 text-indigo-700" />
+                  <span>Kübik Akıllı Matematik Öğretmeni</span>
+                </span>
+                <span className="text-slate-300">·</span>
+                <span className="font-semibold text-slate-700">{grade}. Sınıf {track} Parkuru</span>
+                <span className="text-slate-300">·</span>
+                <span className="text-amber-800 font-semibold flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+                  <span>İçerik Durumu: Doğrulanmış Kayıt Hazırlık Aşamasında</span>
+                </span>
+              </div>
+              <h2 className="text-lg font-bold text-slate-900 tracking-tight">
+                {grade}. Sınıf {track} İçin Doğrulanmış Soru Kaydı Bulunmuyor
+              </h2>
+            </div>
+            {onSwitchStudent && (
+              <button
+                onClick={() => onSwitchStudent('LGS')}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-indigo-900 hover:bg-indigo-800 text-white font-bold rounded-lg text-xs transition-colors shrink-0 shadow-xs"
+              >
+                <span>8. Sınıf LGS Öğretmenini İncele (Kerem)</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
+          <div className="p-4 bg-amber-50/80 border border-amber-200 rounded-lg text-xs text-amber-950 space-y-2">
+            <span className="font-bold text-sm block">Kübik Kaynak Doğruluk İlkesi</span>
+            <p className="leading-relaxed text-amber-900">
+              {unavailableInfo.message}
+            </p>
+            <p className="leading-relaxed text-amber-900">
+              Kübik platformunda soru ve cevap anahtarlarının resmî kaynağı şeffaf biçimde teyit edilmeden "doğrulanmış soru" etiketi kullanılamaz. 11. Sınıf YKS öğrencisine 8. Sınıf LGS içeriği YKS içeriğiymiş gibi sunulmaz; sahte veya yapay kaynak bağlantısı üretilmez.
+            </p>
+          </div>
+
+          <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700 space-y-2">
+            <span className="font-bold text-slate-900 block">Mevcut Durum ve Yol Haritası:</span>
+            <ul className="list-disc list-inside space-y-1 text-slate-600">
+              <li><strong>8. Sınıf LGS Matematik</strong>: MEB ÖDSGM resmî 2018-2019 örnek soru kitapçığı ile doğrulanmış soru kaydı ve adım adım Gemini öğretmeni aktiftir.</li>
+              <li><strong>11. Sınıf YKS Sayısal</strong>: Kazanım izleme, deneme sınavı analizleri ve pedagojik döngü aktiftir. Doğrulanmış ÖSYM/MEB soru köprüsü sonraki aşamada yayımlanacaktır.</li>
+            </ul>
+          </div>
+        </div>
       </div>
     );
   }
@@ -258,11 +351,24 @@ export const GeminiMathTutor: React.FC<GeminiMathTutorProps> = ({
                 <span>Kübik Akıllı Matematik Öğretmeni</span>
               </span>
               <span className="text-slate-300">·</span>
-              <span className="font-semibold text-slate-700">{grade}. Sınıf LGS Parkuru</span>
+              <span className="font-semibold text-slate-700">{grade}. Sınıf {track} Parkuru</span>
               <span className="text-slate-300">·</span>
-              <span className="text-emerald-700 font-semibold flex items-center gap-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Sunucu Doğrulamalı Pedagojik Seans</span>
+              <span className={`text-xs font-semibold flex items-center gap-1 ${
+                question.verificationStatus === 'verified_official_publication'
+                  ? 'text-emerald-700'
+                  : 'text-amber-800'
+              }`}>
+                {question.verificationStatus === 'verified_official_publication' ? (
+                  <>
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Resmî MEB Yayınıyla Doğrulanmış</span>
+                  </>
+                ) : (
+                  <>
+                    <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Müfredat Referanslı Taslak (Resmî Teyit Bekliyor)</span>
+                  </>
+                )}
               </span>
             </div>
             <h2 className="text-lg font-bold text-slate-900 tracking-tight">
@@ -281,6 +387,11 @@ export const GeminiMathTutor: React.FC<GeminiMathTutorProps> = ({
                 <ExternalLink className="w-3 h-3" />
               </a>
             </div>
+            {question.provenanceNotes && (
+              <p className="text-[10px] text-slate-400 mt-1 italic">
+                Doğrulama Notu: {question.provenanceNotes}
+              </p>
+            )}
           </div>
 
           {/* Server Config & API Key Status indicator */}
@@ -307,11 +418,11 @@ export const GeminiMathTutor: React.FC<GeminiMathTutorProps> = ({
           {/* Question Card */}
           <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-4">
             
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-3 border-b border-slate-100">
               <span className="text-xs font-bold uppercase tracking-wider text-indigo-800">
-                Resmi MEB LGS Örnek Sorusu
+                {question.verificationStatus === 'verified_official_publication' ? 'Resmî MEB Örnek Sorusu' : 'Örnek Soru'}
               </span>
-              <span className="text-xs text-slate-500">
+              <span className="text-[11px] text-slate-500">
                 Belge: {question.sourceDocument}
               </span>
             </div>
@@ -420,7 +531,9 @@ export const GeminiMathTutor: React.FC<GeminiMathTutorProps> = ({
                 )}
                 <div>
                   <h3 className="font-bold text-slate-900 text-sm">
-                    {submissionResult.isCorrect ? 'Tebrikler! Doğru Cevap.' : 'Cevabınız Hatalı.'}
+                    {submissionResult.isCorrect 
+                      ? (submissionResult.isRepeatedAttempt ? 'Doğru Cevap (Tekrar Çözüm)' : 'Tebrikler! Doğru Cevap.') 
+                      : 'Cevabınız Hatalı.'}
                   </h3>
                   <p className="text-slate-600 text-[11px]">
                     {submissionResult.explanation}
@@ -460,8 +573,8 @@ export const GeminiMathTutor: React.FC<GeminiMathTutorProps> = ({
                   <span className="font-bold text-slate-800">%{progress.baselineMastery}</span>
                 </div>
                 <div className="p-2 bg-slate-50 rounded border border-slate-100">
-                  <span className="text-[10px] text-slate-500 block">Kayıtlı Çözüm</span>
-                  <span className="font-bold text-slate-800">{progress.correctSubmissions} / {progress.totalSubmissions}</span>
+                  <span className="text-[10px] text-slate-500 block">Benzersiz Soru / Toplam</span>
+                  <span className="font-bold text-slate-800">{progress.uniqueQuestionsSolved || 0} / {progress.totalSubmissions}</span>
                 </div>
                 <div className="p-2 bg-slate-50 rounded border border-slate-100">
                   <span className="text-[10px] text-slate-500 block">Durum</span>
@@ -495,7 +608,7 @@ export const GeminiMathTutor: React.FC<GeminiMathTutorProps> = ({
                   <span className="w-2 h-2 rounded-full bg-emerald-400" />
                 </h3>
                 <p className="text-[10px] text-slate-400">
-                  8. Sınıf LGS Düzeyinde Pedagojik Rehber
+                  {grade}. Sınıf {track} Düzeyinde Pedagojik Rehber
                 </p>
               </div>
             </div>
@@ -572,22 +685,22 @@ export const GeminiMathTutor: React.FC<GeminiMathTutorProps> = ({
           {/* Quick Prompt Suggestion Chips */}
           <div className="p-2 bg-white border-t border-slate-200 flex flex-wrap gap-1.5 shrink-0">
             <button
-              onClick={() => handleSendMessage("8⁴ sayısını 2 tabanında nasıl yazabilirim?")}
+              onClick={() => handleSendMessage(`"${question.topic}" konusundaki temel kuralları özetler misiniz?`)}
               className="text-[11px] px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors text-left"
             >
-              8⁴ sayısını 2 tabanında nasıl yazarım?
+              Temel kuralları özetler misiniz?
             </button>
             <button
-              onClick={() => handleSendMessage("1. tüpte 1 saat sonra bakteri sayısı kaç katına çıkar?")}
+              onClick={() => handleSendMessage("Sorunun ilk adımına nereden başlamalıyım?")}
               className="text-[11px] px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors text-left"
             >
-              1. tüpteki bakteri sayısını bulalım
+              İlk adıma nereden başlamalıyım?
             </button>
             <button
-              onClick={() => handleSendMessage("Üslü sayılarda bölme işlemi kuralını hatırlatır mısınız?")}
+              onClick={() => handleSendMessage(question.pedagogicalHints[0] ? `İpucu hakkında düşünelim: ${question.pedagogicalHints[0]}` : "Çözüm yaklaşımını adım adım tartışalım.")}
               className="text-[11px] px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors text-left"
             >
-              Bölme kuralını hatırlatır mısınız?
+              Adım adım ipucu üzerinden tartışalım
             </button>
           </div>
 

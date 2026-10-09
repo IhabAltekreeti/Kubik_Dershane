@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StudentProfile, DailyTask, TopicProgress } from '../../types';
 import { LEARNING_LOOP_SESSIONS } from '../../data/learningLoopEngine';
 import { LearningLoopModal } from './LearningLoopModal';
@@ -37,6 +37,14 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>(student.subjects[0]?.id || '');
   const [activeLearningLoopId, setActiveLearningLoopId] = useState<string | null>(null);
   const [subjectList, setSubjectList] = useState(student.subjects);
+
+  // Synchronize student-specific state when student changes
+  useEffect(() => {
+    setTasks(student.dailyTasks);
+    setSubjectList(student.subjects);
+    setSelectedSubjectId(student.subjects[0]?.id || '');
+    setActiveLearningLoopId(null);
+  }, [student.id, student.track]);
 
   // Toggle task completion
   const handleToggleTask = (taskId: string) => {
@@ -556,12 +564,16 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
       {/* TAB 4: GEMINI MATHEMATICS TUTOR BRIDGE */}
       {activeTab === 'tutor' && (
         <GeminiMathTutor
+          key={student.id}
           studentId={student.id}
           studentName={student.name}
           grade={student.grade}
+          track={student.track}
           onMasteryUpdated={(newScore) => {
-            handleMasteryUpdated('top_lgs_uslu', newScore);
+            const targetTopicId = student.track === 'LGS' ? 'top_lgs_uslu' : 'top_yks_fonk';
+            handleMasteryUpdated(targetTopicId, newScore);
           }}
+          onSwitchStudent={onSwitchStudent}
         />
       )}
 

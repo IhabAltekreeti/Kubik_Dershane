@@ -21,7 +21,11 @@
         "feedbackMessage": "Tebrikler! Soru 1 pedagojik ipucu yardımıyla doğru çözüldü (+%4 kazanım artışı)."
       }
     ],
-    "ruleExplanation": "Kayıtlı yanıtlar: 1 doğru / 1 toplam deneme. (Not: Tek bir soru konunun tümünü kazandırmaz; düzenli doğrulama gereklidir)."
+    "ruleExplanation": "Kayıtlı yanıtlar: 1 doğru / 1 toplam deneme. (Not: Tek bir soru konunun tümünü kazandırmaz; düzenli doğrulama gereklidir).",
+    "solvedQuestionIds": [
+      "meb-lgs-8-mat-uslu-01"
+    ],
+    "uniqueQuestionsSolved": 1
   },
   "std_yks_1101:top_yks_fonk": {
     "studentId": "std_yks_1101",
@@ -33,6 +37,172 @@
     "correctSubmissions": 0,
     "status": "needs_practice",
     "evidenceLog": [],
-    "ruleExplanation": "Başlangıç deneme sınavı teşhis skoru: %55."
+    "ruleExplanation": "Başlangıç deneme sınavı teşhis skoru: %55.",
+    "solvedQuestionIds": [],
+    "uniqueQuestionsSolved": 0
+  },
+  "std_test_isolated_1791554849339:top_test_math": {
+    "studentId": "std_test_isolated_1791554849339",
+    "topicId": "top_test_math",
+    "topicName": "Matematik Kazanımı",
+    "baselineMastery": 50,
+    "currentMastery": 56,
+    "totalSubmissions": 3,
+    "correctSubmissions": 2,
+    "uniqueQuestionsSolved": 1,
+    "solvedQuestionIds": [
+      "meb-lgs-8-mat-uslu-01"
+    ],
+    "status": "in_progress",
+    "evidenceLog": [
+      {
+        "id": "sub_1791554849342",
+        "studentId": "std_test_isolated_1791554849339",
+        "questionId": "meb-another-test-q",
+        "submittedAt": "2026-10-09T14:07:29.342Z",
+        "chosenOptionId": "C",
+        "isCorrect": false,
+        "hintsUsedCount": 1,
+        "aiTutorInteractionsCount": 0,
+        "feedbackMessage": "Cevap doğru değil. Kazanım puanı artırılmadı. Konunun tam kavranması için Gemini Matematik Öğretmeni ile çözüm adımlarını inceleyiniz.",
+        "isRepeatedAttempt": false
+      },
+      {
+        "id": "sub_1791554849342",
+        "studentId": "std_test_isolated_1791554849339",
+        "questionId": "meb-lgs-8-mat-uslu-01",
+        "submittedAt": "2026-10-09T14:07:29.342Z",
+        "chosenOptionId": "B",
+        "isCorrect": true,
+        "hintsUsedCount": 0,
+        "aiTutorInteractionsCount": 2,
+        "feedbackMessage": "Bu soru daha önce doğru olarak tamamlanmıştır. Tekrar çözümünüz kayıt altına alındı ancak mükerrer kazanım artışı uygulanmadı (+%0).",
+        "isRepeatedAttempt": true
+      },
+      {
+        "id": "sub_1791554849339",
+        "studentId": "std_test_isolated_1791554849339",
+        "questionId": "meb-lgs-8-mat-uslu-01",
+        "submittedAt": "2026-10-09T14:07:29.339Z",
+        "chosenOptionId": "B",
+        "isCorrect": true,
+        "hintsUsedCount": 0,
+        "aiTutorInteractionsCount": 1,
+        "feedbackMessage": "Tebrikler! Soru hiç ipucu kullanılmadan ilk kez doğru çözüldü (+%6 kazanım artışı).",
+        "isRepeatedAttempt": false
+      }
+    ],
+    "ruleExplanation": "Kayıtlı yanıtlar: 1 benzersiz soru kazanıldı (2 doğru deneme / 3 toplam deneme). (Not: Tek bir sorunun tekrar çözülmesi kazanım puanını mükerrer artırmaz; konunun kazanılması için en az 3 farklı soru gereklidir)."
+  },
+  "std_test_a_1791554849342:top_isolation_check": {
+    "studentId": "std_test_a_1791554849342",
+    "topicId": "top_isolation_check",
+    "topicName": "Matematik Kazanımı",
+    "baselineMastery": 50,
+    "currentMastery": 56,
+    "totalSubmissions": 1,
+    "correctSubmissions": 1,
+    "uniqueQuestionsSolved": 1,
+    "solvedQuestionIds": [
+      "q_iso_1"
+    ],
+    "status": "in_progress",
+    "evidenceLog": [
+      {
+        "id": "sub_1791554849342",
+        "studentId": "std_test_a_1791554849342",
+        "questionId": "q_iso_1",
+        "submittedAt": "2026-10-09T14:07:29.342Z",
+        "chosenOptionId": "B",
+        "isCorrect": true,
+        "hintsUsedCount": 0,
+        "aiTutorInteractionsCount": 0,
+        "feedbackMessage": "Tebrikler! Soru hiç ipucu kullanılmadan ilk kez doğru çözüldü (+%6 kazanım artışı).",
+        "isRepeatedAttempt": false
+      }
+    ],
+    "ruleExplanation": "Kayıtlı yanıtlar: 1 benzersiz soru kazanıldı (1 doğru deneme / 1 toplam deneme). (Not: Tek bir sorunun tekrar çözülmesi kazanım puanını mükerrer artırmaz; konunun kazanılması için en az 3 farklı soru gereklidir)."
+  },
+  "std_test_isolated_1791554862536:top_test_math": {
+    "studentId": "std_test_isolated_1791554862536",
+    "topicId": "top_test_math",
+    "topicName": "Matematik Kazanımı",
+    "baselineMastery": 50,
+    "currentMastery": 56,
+    "totalSubmissions": 3,
+    "correctSubmissions": 2,
+    "uniqueQuestionsSolved": 1,
+    "solvedQuestionIds": [
+      "meb-lgs-8-mat-uslu-01"
+    ],
+    "status": "in_progress",
+    "evidenceLog": [
+      {
+        "id": "sub_1791554862539",
+        "studentId": "std_test_isolated_1791554862536",
+        "questionId": "meb-another-test-q",
+        "submittedAt": "2026-10-09T14:07:42.539Z",
+        "chosenOptionId": "C",
+        "isCorrect": false,
+        "hintsUsedCount": 1,
+        "aiTutorInteractionsCount": 0,
+        "feedbackMessage": "Cevap doğru değil. Kazanım puanı artırılmadı. Konunun tam kavranması için Gemini Matematik Öğretmeni ile çözüm adımlarını inceleyiniz.",
+        "isRepeatedAttempt": false
+      },
+      {
+        "id": "sub_1791554862539",
+        "studentId": "std_test_isolated_1791554862536",
+        "questionId": "meb-lgs-8-mat-uslu-01",
+        "submittedAt": "2026-10-09T14:07:42.539Z",
+        "chosenOptionId": "B",
+        "isCorrect": true,
+        "hintsUsedCount": 0,
+        "aiTutorInteractionsCount": 2,
+        "feedbackMessage": "Bu soru daha önce doğru olarak tamamlanmıştır. Tekrar çözümünüz kayıt altına alındı ancak mükerrer kazanım artışı uygulanmadı (+%0).",
+        "isRepeatedAttempt": true
+      },
+      {
+        "id": "sub_1791554862537",
+        "studentId": "std_test_isolated_1791554862536",
+        "questionId": "meb-lgs-8-mat-uslu-01",
+        "submittedAt": "2026-10-09T14:07:42.537Z",
+        "chosenOptionId": "B",
+        "isCorrect": true,
+        "hintsUsedCount": 0,
+        "aiTutorInteractionsCount": 1,
+        "feedbackMessage": "Tebrikler! Soru hiç ipucu kullanılmadan ilk kez doğru çözüldü (+%6 kazanım artışı).",
+        "isRepeatedAttempt": false
+      }
+    ],
+    "ruleExplanation": "Kayıtlı yanıtlar: 1 benzersiz soru kazanıldı (2 doğru deneme / 3 toplam deneme). (Not: Tek bir sorunun tekrar çözülmesi kazanım puanını mükerrer artırmaz; konunun kazanılması için en az 3 farklı soru gereklidir)."
+  },
+  "std_test_a_1791554862540:top_isolation_check": {
+    "studentId": "std_test_a_1791554862540",
+    "topicId": "top_isolation_check",
+    "topicName": "Matematik Kazanımı",
+    "baselineMastery": 50,
+    "currentMastery": 56,
+    "totalSubmissions": 1,
+    "correctSubmissions": 1,
+    "uniqueQuestionsSolved": 1,
+    "solvedQuestionIds": [
+      "q_iso_1"
+    ],
+    "status": "in_progress",
+    "evidenceLog": [
+      {
+        "id": "sub_1791554862540",
+        "studentId": "std_test_a_1791554862540",
+        "questionId": "q_iso_1",
+        "submittedAt": "2026-10-09T14:07:42.540Z",
+        "chosenOptionId": "B",
+        "isCorrect": true,
+        "hintsUsedCount": 0,
+        "aiTutorInteractionsCount": 0,
+        "feedbackMessage": "Tebrikler! Soru hiç ipucu kullanılmadan ilk kez doğru çözüldü (+%6 kazanım artışı).",
+        "isRepeatedAttempt": false
+      }
+    ],
+    "ruleExplanation": "Kayıtlı yanıtlar: 1 benzersiz soru kazanıldı (1 doğru deneme / 1 toplam deneme). (Not: Tek bir sorunun tekrar çözülmesi kazanım puanını mükerrer artırmaz; konunun kazanılması için en az 3 farklı soru gereklidir)."
   }
 }

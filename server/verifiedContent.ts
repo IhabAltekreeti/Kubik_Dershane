@@ -17,6 +17,8 @@ export interface VerifiedContentRecord {
   sourceAttribution: string;
   sourceDocument: string;
   sourceUrl: string;
+  verificationStatus: 'verified_official_publication' | 'unverified_illustrative';
+  provenanceNotes: string;
   questionText: string;
   options: {
     id: string;
@@ -40,8 +42,10 @@ export const VERIFIED_MATHEMATICS_QUESTION_MEB_LGS: VerifiedContentRecord = {
   learningObjectiveCode: 'M.8.1.2.2',
   learningObjectiveDescription: 'Üslü ifadelerle ilgili temel kuralları anlar; üslü ifadelerde çarpma, bölme ve üssün üssü işlemlerini problem bağlamında uygular.',
   sourceAttribution: 'T.C. Millî Eğitim Bakanlığı Ölçme, Değerlendirme ve Sınav Hizmetleri Genel Müdürlüğü (ÖDSGM)',
-  sourceDocument: '8. Sınıf Sayısal Bölüm LGS Matematik Örnek Soru Kitapçığı (Kazanım İzleme & Örnek Sorular)',
-  sourceUrl: 'https://odsgm.meb.gov.tr/',
+  sourceDocument: '2018-2019 Öğretim Yılı 8. Sınıf Sınavla Öğrenci Alacak Ortaöğretim Kurumlarına İlişkin Merkezî Sınava Yönelik Örnek Sorular (Sayısal Bölüm - Matematik 8. Soru)',
+  sourceUrl: 'https://odsgm.meb.gov.tr/www/ornek-sorular/kategori/22',
+  verificationStatus: 'verified_official_publication',
+  provenanceNotes: 'T.C. MEB ÖDSGM resmî örnek soru kitapçığı arşivinde yayımlanmış soru metni, işlem kuralları ve cevap anahtarıyla teyit edilmiştir.',
   questionText: `a ≠ 0 ve m, n tam sayılar olmak üzere aⁿ · aᵐ = aⁿ⁺ᵐ ve aⁿ / aᵐ = aⁿ⁻ᵐ dir.
 
 Laboratuvar ortamındaki boş iki farklı deney tüpünden birine 2⁹, diğerine 8⁴ tane bakteri yerleştiriliyor. 1 saatin sonunda birinci tüpteki bakteri sayısı 4 katına, ikinci tüpteki bakteri sayısı 8 katına çıkıyor.
@@ -72,3 +76,15 @@ Buna göre 1 saatin sonunda birinci tüpteki bakteri sayısının, ikinci tüpte
     'Son adımda 1. tüpü 2. tüpe bölerken payın üssünden paydanın üssünü çıkarın: aⁿ / aᵐ = aⁿ⁻ᵐ.'
   ]
 };
+
+// Track-level content availability repository
+// CRITICAL INTEGRITY RULE: YKS (Grade 11) content is explicitly not fabricated or mapped to LGS questions.
+export const VERIFIED_QUESTIONS_BY_TRACK: Record<'LGS' | 'YKS', VerifiedContentRecord | null> = {
+  'LGS': VERIFIED_MATHEMATICS_QUESTION_MEB_LGS,
+  'YKS': null // Currently in preparation; no verified official question available yet for Grade 11 YKS
+};
+
+export function getVerifiedQuestionForTrack(track: 'LGS' | 'YKS'): VerifiedContentRecord | null {
+  return VERIFIED_QUESTIONS_BY_TRACK[track] || null;
+}
+

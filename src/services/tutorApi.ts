@@ -16,10 +16,21 @@ export interface VerifiedQuestionData {
   sourceAttribution: string;
   sourceDocument: string;
   sourceUrl: string;
+  verificationStatus: 'verified_official_publication' | 'unverified_illustrative';
+  provenanceNotes: string;
   questionText: string;
   options: { id: string; text: string }[];
   pedagogicalHintsCount: number;
   pedagogicalHints: string[];
+}
+
+export interface VerifiedQuestionResponse {
+  available: boolean;
+  question: VerifiedQuestionData | null;
+  track: 'LGS' | 'YKS';
+  grade?: number;
+  message?: string;
+  reason?: string;
 }
 
 export interface LearningEvidenceItem {
@@ -32,6 +43,7 @@ export interface LearningEvidenceItem {
   hintsUsedCount: number;
   aiTutorInteractionsCount: number;
   feedbackMessage: string;
+  isRepeatedAttempt?: boolean;
 }
 
 export interface TopicProgressResponse {
@@ -42,6 +54,8 @@ export interface TopicProgressResponse {
   currentMastery: number;
   totalSubmissions: number;
   correctSubmissions: number;
+  uniqueQuestionsSolved: number;
+  solvedQuestionIds: string[];
   status: 'needs_practice' | 'in_progress' | 'mastered';
   evidenceLog: LearningEvidenceItem[];
   ruleExplanation: string;
@@ -56,6 +70,7 @@ export interface AnswerSubmissionResult {
   };
   delta: number;
   explanation: string;
+  isRepeatedAttempt?: boolean;
   updatedMastery: TopicProgressResponse;
 }
 
@@ -69,13 +84,16 @@ export async function fetchHealth(): Promise<{ status: string; hasGeminiKey: boo
   }
 }
 
-export async function fetchVerifiedQuestion(): Promise<VerifiedQuestionData> {
-  const res = await fetch('/api/content/verified-question');
+export async function fetchVerifiedQuestion(studentId?: string, track?: 'LGS' | 'YKS'): Promise<VerifiedQuestionResponse> {
+  const params = new URLSearchParams();
+  if (studentId) params.set('studentId', studentId);
+  if (track) params.set('track', track);
+
+  const res = await fetch(`/api/content/verified-question?${params.toString()}`);
   if (!res.ok) {
     throw new Error('Doğrulanmış MEB soru kaydı alınamadı.');
   }
-  const data = await res.json();
-  return data.question;
+  return await res.json();
 }
 
 export async function fetchStudentProgress(studentId: string, topicId: string): Promise<TopicProgressResponse> {

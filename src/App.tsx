@@ -56,6 +56,7 @@ export default function App() {
         {currentRole === 'student' && (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <StudentDashboard
+              key={activeStudent.id}
               student={activeStudent}
               onOpenAssessmentModal={() => setIsAssessmentOpen(true)}
               onSwitchStudent={handleSwitchTrack}
@@ -74,6 +75,7 @@ export default function App() {
         {currentRole === 'parent' && (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <ParentWorkspace
+              key={activeStudent.id}
               student={activeStudent}
               onSwitchStudent={handleSwitchTrack}
             />
