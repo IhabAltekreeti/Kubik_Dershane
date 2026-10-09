@@ -1,0 +1,38 @@
+{
+  "std_lgs_801:top_lgs_uslu": {
+    "studentId": "std_lgs_801",
+    "topicId": "top_lgs_uslu",
+    "topicName": "Üslü İfadeler: Negatif Üsler ve İşlem Kuralları",
+    "baselineMastery": 52,
+    "currentMastery": 56,
+    "totalSubmissions": 1,
+    "correctSubmissions": 1,
+    "status": "in_progress",
+    "evidenceLog": [
+      {
+        "id": "sub_1791545229827",
+        "studentId": "std_lgs_801",
+        "questionId": "meb-lgs-8-mat-uslu-01",
+        "submittedAt": "2026-10-09T11:27:09.827Z",
+        "chosenOptionId": "B",
+        "isCorrect": true,
+        "hintsUsedCount": 1,
+        "aiTutorInteractionsCount": 1,
+        "feedbackMessage": "Tebrikler! Soru 1 pedagojik ipucu yardımıyla doğru çözüldü (+%4 kazanım artışı)."
+      }
+    ],
+    "ruleExplanation": "Kayıtlı yanıtlar: 1 doğru / 1 toplam deneme. (Not: Tek bir soru konunun tümünü kazandırmaz; düzenli doğrulama gereklidir)."
+  },
+  "std_yks_1101:top_yks_fonk": {
+    "studentId": "std_yks_1101",
+    "topicId": "top_yks_fonk",
+    "topicName": "Fonksiyonlarda Simetri & Grafik Öteleme",
+    "baselineMastery": 55,
+    "currentMastery": 55,
+    "totalSubmissions": 0,
+    "correctSubmissions": 0,
+    "status": "needs_practice",
+    "evidenceLog": [],
+    "ruleExplanation": "Başlangıç deneme sınavı teşhis skoru: %55."
+  }
+}

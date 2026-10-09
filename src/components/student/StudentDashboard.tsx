@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { StudentProfile, DailyTask, TopicProgress } from '../../types';
 import { LEARNING_LOOP_SESSIONS } from '../../data/learningLoopEngine';
 import { LearningLoopModal } from './LearningLoopModal';
+import { GeminiMathTutor } from './GeminiMathTutor';
 import { 
   Target, 
   Flame, 
@@ -16,7 +17,8 @@ import {
   BarChart3, 
   Calendar,
   Layers,
-  ChevronRight
+  ChevronRight,
+  BrainCircuit
 } from 'lucide-react';
 
 interface StudentDashboardProps {
@@ -31,7 +33,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   onSwitchStudent
 }) => {
   const [tasks, setTasks] = useState<DailyTask[]>(student.dailyTasks);
-  const [activeTab, setActiveTab] = useState<'overview' | 'subjects' | 'exams' | 'analysis'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'subjects' | 'exams' | 'tutor'>('overview');
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>(student.subjects[0]?.id || '');
   const [activeLearningLoopId, setActiveLearningLoopId] = useState<string | null>(null);
   const [subjectList, setSubjectList] = useState(student.subjects);
@@ -155,18 +157,27 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs font-semibold">
+      <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs font-semibold overflow-x-auto">
         <button
           onClick={() => setActiveTab('overview')}
-          className={`px-4 py-2 rounded-md transition-colors ${
+          className={`px-4 py-2 rounded-md whitespace-nowrap transition-colors ${
             activeTab === 'overview' ? 'bg-white text-slate-950 shadow-xs' : 'text-slate-600 hover:text-slate-900'
           }`}
         >
           Günlük Plan & Öncelikler
         </button>
         <button
+          onClick={() => setActiveTab('tutor')}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-md whitespace-nowrap transition-colors ${
+            activeTab === 'tutor' ? 'bg-indigo-900 text-white shadow-xs' : 'text-indigo-900 hover:text-indigo-950 bg-indigo-50/70'
+          }`}
+        >
+          <BrainCircuit className="w-3.5 h-3.5 text-amber-300" />
+          <span>Gemini Matematik Öğretmeni (Canlı Köprü)</span>
+        </button>
+        <button
           onClick={() => setActiveTab('subjects')}
-          className={`px-4 py-2 rounded-md transition-colors ${
+          className={`px-4 py-2 rounded-md whitespace-nowrap transition-colors ${
             activeTab === 'subjects' ? 'bg-white text-slate-950 shadow-xs' : 'text-slate-600 hover:text-slate-900'
           }`}
         >
@@ -174,7 +185,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
         </button>
         <button
           onClick={() => setActiveTab('exams')}
-          className={`px-4 py-2 rounded-md transition-colors ${
+          className={`px-4 py-2 rounded-md whitespace-nowrap transition-colors ${
             activeTab === 'exams' ? 'bg-white text-slate-950 shadow-xs' : 'text-slate-600 hover:text-slate-900'
           }`}
         >
@@ -206,13 +217,22 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                     Son deneme sınavınızdaki hata analizinden tespit edildi. 6 adımlı rehberli döngüyü tamamlayarak kazanım puanınızı yükseltin.
                   </p>
                 </div>
-                <button
-                  onClick={() => handleLaunchLoop('default')}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold rounded-lg text-xs transition-colors shrink-0 shadow-sm"
-                >
-                  <Play className="w-4 h-4 fill-slate-950" />
-                  <span>Döngüyü Başlat (15 Dk)</span>
-                </button>
+                <div className="flex flex-col sm:flex-row gap-2 shrink-0">
+                  <button
+                    onClick={() => setActiveTab('tutor')}
+                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-indigo-700 hover:bg-indigo-600 text-white font-bold rounded-lg text-xs transition-colors shadow-sm"
+                  >
+                    <BrainCircuit className="w-3.5 h-3.5 text-amber-300" />
+                    <span>Gemini Öğretmene Danış</span>
+                  </button>
+                  <button
+                    onClick={() => handleLaunchLoop('default')}
+                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold rounded-lg text-xs transition-colors shadow-sm"
+                  >
+                    <Play className="w-3.5 h-3.5 fill-slate-950" />
+                    <span>6 Adımlı Döngü</span>
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -531,6 +551,18 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {/* TAB 4: GEMINI MATHEMATICS TUTOR BRIDGE */}
+      {activeTab === 'tutor' && (
+        <GeminiMathTutor
+          studentId={student.id}
+          studentName={student.name}
+          grade={student.grade}
+          onMasteryUpdated={(newScore) => {
+            handleMasteryUpdated('top_lgs_uslu', newScore);
+          }}
+        />
       )}
 
       {/* Kübik Learning Loop Modal Instance */}
