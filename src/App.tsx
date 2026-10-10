@@ -74,8 +74,7 @@ export default function App() {
             <ParentWorkspace
               key={activeStudent.id}
               student={activeStudent}
-              onSwitchStudent={handleSwitchTrack}
-            />
+             />
           </div>
         )}
 

@@ -15,13 +15,11 @@ import {
 
 interface ParentWorkspaceProps {
   student: StudentProfile;
-  onSwitchStudent?: (track: 'LGS' | 'YKS') => void;
-}
+ }
 
 export const ParentWorkspace: React.FC<ParentWorkspaceProps> = ({
   student,
-  onSwitchStudent
-}) => {
+ }) => {
   return (
     <div className="space-y-6">
       

@@ -32,8 +32,7 @@ interface GeminiMathTutorProps {
   grade: number;
   track: 'LGS' | 'YKS';
   onMasteryUpdated?: (newScore: number) => void;
-  onSwitchStudent?: (track: 'LGS' | 'YKS') => void;
-}
+ }
 
 interface ChatMessage {
   id: string;
@@ -48,8 +47,7 @@ export const GeminiMathTutor: React.FC<GeminiMathTutorProps> = ({
   grade,
   track,
   onMasteryUpdated,
-  onSwitchStudent
-}) => {
+ }) => {
   const [question, setQuestion] = useState<VerifiedQuestionData | null>(null);
   const [unavailableInfo, setUnavailableInfo] = useState<{ message: string; track: string } | null>(null);
   const [progress, setProgress] = useState<TopicProgressResponse | null>(null);
@@ -289,16 +287,7 @@ export const GeminiMathTutor: React.FC<GeminiMathTutorProps> = ({
                 {grade}. Sınıf {track} İçin Doğrulanmış Soru Kaydı Bulunmuyor
               </h2>
             </div>
-            {onSwitchStudent && (
-              <button
-                onClick={() => onSwitchStudent('LGS')}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-indigo-900 hover:bg-indigo-800 text-white font-bold rounded-lg text-xs transition-colors shrink-0 shadow-xs"
-              >
-                <span>8. Sınıf LGS Öğretmenini İncele (Kerem)</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
+           </div>
         </div>
 
         <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
