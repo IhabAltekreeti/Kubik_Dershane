@@ -57,8 +57,7 @@ export default function App() {
               key={activeStudent.id}
               student={activeStudent}
               onOpenAssessmentModal={() => setIsAssessmentOpen(true)}
-              onSwitchStudent={handleSwitchTrack}
-            />
+             />
           </div>
         )}
 

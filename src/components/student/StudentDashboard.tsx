@@ -24,14 +24,12 @@ import {
 interface StudentDashboardProps {
   student: StudentProfile;
   onOpenAssessmentModal: () => void;
-  onSwitchStudent: (track: 'LGS' | 'YKS') => void;
-}
+ }
 
 export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   student,
   onOpenAssessmentModal,
-  onSwitchStudent
-}) => {
+ }) => {
   const [tasks, setTasks] = useState<DailyTask[]>(student.dailyTasks);
   const [activeTab, setActiveTab] = useState<'overview' | 'subjects' | 'exams' | 'tutor'>('overview');
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>(student.subjects[0]?.id || '');
@@ -174,34 +172,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
 
         </div>
 
-        {/* Track switch prompt */}
-        <div className="mt-4 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between text-xs text-slate-500 gap-2">
-          <span>
-            Diğer demo profilini incelemek için:
-          </span>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => onSwitchStudent('LGS')}
-              className={`px-2.5 py-1 rounded text-xs font-semibold border transition-colors ${
-                student.track === 'LGS' 
-                  ? 'bg-slate-900 text-white border-slate-900' 
-                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
-              }`}
-            >
-              8. Sınıf Kerem (LGS)
-            </button>
-            <button
-              onClick={() => onSwitchStudent('YKS')}
-              className={`px-2.5 py-1 rounded text-xs font-semibold border transition-colors ${
-                student.track === 'YKS' 
-                  ? 'bg-slate-900 text-white border-slate-900' 
-                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
-              }`}
-            >
-              11. Sınıf Selin (YKS)
-            </button>
-          </div>
-        </div>
+        <div className="mt-4 border-t border-slate-100 pt-3 text-[11px] text-slate-500">Örnek öğrenci hesabı · Bu ekran yalnızca {student.name} profiline ait örnek verileri gösterir.</div>
       </div>
 
       {/* Tabs */}
