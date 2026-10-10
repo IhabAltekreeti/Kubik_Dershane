@@ -38,6 +38,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   const [activeLearningLoopId, setActiveLearningLoopId] = useState<string | null>(null);
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [subjectList, setSubjectList] = useState(student.subjects);
+  const [activeTopicPreview, setActiveTopicPreview] = useState<TopicProgress | null>(null);
 
   // Synchronize student-specific state when student changes
   useEffect(() => {
@@ -66,10 +67,15 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
       return;
     }
 
-    const matchingTask = tasks.find(task => task.track === student.track && task.topicId === topicId);
+    const selectedTopic = subjectList.flatMap(subject => subject.topics).find(topic => topic.id === topicId);
     setActiveLearningLoopId(null);
-    setActiveTaskId(matchingTask?.id ?? null);
+    setActiveTaskId(null);
+    setActiveTopicPreview(selectedTopic ?? null);
   };
+
+  const hasLearningLoop = (topicId: string) => Object.values(LEARNING_LOOP_SESSIONS).some(
+    session => session.track === student.track && session.topicId === topicId
+  );
 
   // Callback after completing loop
   const handleMasteryUpdated = (topicId: string, newScore: number) => {
@@ -357,7 +363,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                       onClick={() => handleLaunchLoop(topic.id)}
                       className="w-full py-1.5 px-2.5 bg-white hover:bg-slate-100 border border-slate-200 text-indigo-900 font-semibold rounded text-center transition-colors block text-[11px]"
                     >
-                      Kübik Öğrenme Döngüsü ile Telafi Et →
+                      {hasLearningLoop(topic.id) ? 'Kübik Öğrenme Döngüsü ile Telafi Et →' : 'Konu Raporunu İncele →'}
                     </button>
                   </div>
                 ))}
@@ -490,7 +496,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                     onClick={() => handleLaunchLoop(topic.id)}
                     className="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-900 font-bold rounded-md text-xs transition-colors"
                   >
-                    Kazanım Seansı Başlat
+                    {hasLearningLoop(topic.id) ? 'Kazanım Seansı Başlat' : 'Konu Raporunu İncele'}
                   </button>
                 </div>
               </div>
@@ -570,6 +576,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
           onSwitchStudent={onSwitchStudent}
         />
       )}
+
+      {activeTopicPreview && <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-950/60 p-4"><div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl"><p className="text-xs font-bold uppercase tracking-wider text-indigo-700">Konu Raporu · {student.grade}. Sınıf {student.track}</p><h2 className="mt-2 text-lg font-bold text-slate-900">{activeTopicPreview.name}</h2><div className="mt-4 grid grid-cols-2 gap-3"><div className="rounded-lg bg-slate-50 p-3"><p className="text-xs text-slate-500">Kazanım puanı</p><p className="text-xl font-bold">%{activeTopicPreview.masteryLevel}</p></div><div className="rounded-lg bg-slate-50 p-3"><p className="text-xs text-slate-500">Soru doğruluğu</p><p className="text-xl font-bold">%{activeTopicPreview.accuracyRate.toFixed(1)}</p></div></div><p className="mt-4 text-sm leading-relaxed text-slate-700">{activeTopicPreview.diagnosedWeakness || activeTopicPreview.evidenceNotes || 'Bu konu için henüz ek bir öğretmen notu bulunmuyor.'}</p><p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs leading-relaxed text-amber-950">Bu konu için ayrı bir 6 adımlı etkileşimli ders henüz tanımlı değil. Bu ekran konu verilerini gösterir; tamamlanmış bir ders veya doğrulanmış yeni kazanım gibi davranmaz.</p><div className="mt-5 flex justify-end"><button onClick={() => setActiveTopicPreview(null)} className="rounded-md bg-indigo-900 px-4 py-2 text-xs font-bold text-white">Kapat</button></div></div></div>}
 
       {activeTaskId && (() => { const task = tasks.find(item => item.id === activeTaskId); if (!task) return null; return <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-950/60 p-4"><div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl"><p className="text-xs font-bold uppercase tracking-wider text-indigo-700">Görev Başlatıldı · Demo Etkinliği</p><h2 className="mt-2 text-lg font-bold text-slate-900">{task.title}</h2><p className="mt-3 text-sm leading-relaxed text-slate-600">{task.description}</p><div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4 text-xs leading-relaxed text-slate-700">{task.type === 'practice_quiz' ? 'Bu prototipte bu görev için ayrı bir soru seti henüz bağlanmadı. Görev akışını ve tamamlanma davranışını deneyebilirsiniz.' : 'Bu prototipte bu görev bir çalışma yönergesi olarak gösterilir. Gerçek içerik, ilgili öğretmen materyalleri bağlandığında sunulmalıdır.'}</div><div className="mt-5 flex justify-end gap-2"><button onClick={() => setActiveTaskId(null)} className="rounded-md border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-700">Vazgeç</button><button onClick={() => { const nextTasks = tasks.map(item => item.id === task.id ? { ...item, completed: true } : item); setTasks(nextTasks); try { window.localStorage.setItem(`kubik:tasks:${student.id}`, JSON.stringify(nextTasks)); } catch (error) { console.warn('Demo task progress could not be saved locally.', error); } setActiveTaskId(null); }} className="rounded-md bg-indigo-900 px-4 py-2 text-xs font-bold text-white">Görevi Bitir</button></div></div></div>; })()}
 
