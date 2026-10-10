@@ -56,7 +56,7 @@ export const ParentWorkspace: React.FC<ParentWorkspaceProps> = ({
           </div>
           <div className="text-2xl font-bold text-slate-900">{student.weeklyStudyHours} Saat</div>
           <p className="text-[11px] text-emerald-800 font-medium mt-1">
-            ✓ Kübik haftalık hedefinin %95'i tamamlandı
+            {Math.round((student.subjects.reduce((sum, subject) => sum + subject.completedHours, 0) / Math.max(1, student.subjects.reduce((sum, subject) => sum + subject.weeklyGoalHours, 0))) * 100)}% haftalık çalışma hedefi tamamlandı (örnek veri)
           </p>
         </div>
 
@@ -173,11 +173,11 @@ export const ParentWorkspace: React.FC<ParentWorkspaceProps> = ({
             <ul className="space-y-2 text-xs text-slate-200">
               <li className="flex items-start gap-2">
                 <span className="text-amber-400 font-bold">•</span>
-                <span>Deneme sonuçlarında puandan çok eksik kalan konuların tamamlanıp tamamlanmadığını sorun.</span>
+                <span>{student.track === 'LGS' ? 'Bu hafta Matematikte üslü ifadeler ve Fen Bilimlerinde mevsimler konusundaki ilerlemeyi sorun.' : 'Bu hafta Fonksiyon dönüşümleri ve Bağıl Hareket konularındaki ilerlemeyi sorun.'}</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-amber-400 font-bold">•</span>
-                <span>Kübik Öğrenme Döngüsü'nde tamamladığı konular için takdir edin.</span>
+                <span>Çalışma planında tamamlanan görevleri ve haftalık hedefe kalan süreyi birlikte gözden geçirin.</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-amber-400 font-bold">•</span>

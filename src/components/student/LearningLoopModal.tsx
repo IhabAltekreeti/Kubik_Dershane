@@ -409,7 +409,7 @@ export const LearningLoopModal: React.FC<LearningLoopModalProps> = ({
                   disabled={!assessmentCorrect}
                   onClick={() => setActiveStep(5)}
                   className={`inline-flex items-center gap-1.5 px-4 py-2 font-semibold rounded-md transition-colors text-xs ${
-                    assessmentCompleted 
+                    assessmentCorrect 
                       ? 'bg-indigo-900 text-white hover:bg-indigo-800' 
                       : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                   }`}

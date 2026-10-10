@@ -13,7 +13,7 @@ export const Footer: React.FC<FooterProps> = ({
   return (
     <footer className="bg-slate-900 text-slate-400 text-xs border-t border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           
           {/* Brand info */}
           <div className="space-y-3 md:col-span-1">
@@ -22,10 +22,10 @@ export const Footer: React.FC<FooterProps> = ({
               <span>KÜBİK DİJİTAL AKADEMİ</span>
             </div>
             <p className="text-slate-400 text-[11px] leading-relaxed">
-              Kübik Dershanesi Eğitim Ağının yapay zeka destekli LGS (8. Sınıf) ve YKS (11. Sınıf) hibrit öğrenme platformu prototipi.
+              Kübik Dershanesi'nin öğrenci çalışması, konu takibi ve rehberlik süreçlerini dijital ortamda desteklemek üzere hazırlanan platform prototipi. Ekranlardaki öğrenci bilgileri örnek veridir.
             </p>
             <div className="text-[11px] text-slate-500">
-              İstanbul Kampüsü & Türkiye Geneli Hibrit Ağ
+              Ortaokul ve lise düzeylerine uyarlanabilecek dijital öğrenme deneyimi
             </div>
           </div>
 
@@ -53,11 +53,6 @@ export const Footer: React.FC<FooterProps> = ({
                   Veli Bilgilendirme Portalı
                 </button>
               </li>
-              <li>
-                <button onClick={() => onSelectRole('management')} className="hover:text-white transition-colors">
-                  Yönetim & Büyüme Analitiği
-                </button>
-              </li>
             </ul>
           </div>
 
@@ -65,8 +60,8 @@ export const Footer: React.FC<FooterProps> = ({
           <div className="space-y-2">
             <div className="text-white font-semibold text-xs uppercase tracking-wider">Hazırlık Programları</div>
             <ul className="space-y-1.5 text-[11px]">
-              <li className="text-slate-400">8. Sınıf LGS: Matematik, Fen, Türkçe, İnkılap</li>
-              <li className="text-slate-400">11. Sınıf YKS: Sayısal (Matematik, Fizik, Kimya, Biyo)</li>
+              <li className="text-slate-400">Ortaokul: LGS hazırlığı ve kazanım takibi</li>
+              <li className="text-slate-400">Lise: Ders bazlı takip ve TYT/AYT hazırlığı</li>
               <li className="text-slate-400">TYT Paragraf & Temel Matematik Rutinleri</li>
               <li className="text-slate-400">Kübik 6 Adımlı Öğrenme Döngüsü</li>
             </ul>
@@ -76,7 +71,7 @@ export const Footer: React.FC<FooterProps> = ({
           <div className="space-y-3">
             <div className="text-white font-semibold text-xs uppercase tracking-wider">Hızlı Başlangıç</div>
             <p className="text-[11px] text-slate-400">
-              3 dakikalık tanı testiyle öğrencinizin konu açıklarını hemen keşfedin.
+              Örnek seviye tespit akışını inceleyin. Sonuçlar prototip verisiyle gösterilir.
             </p>
             <button
               onClick={onOpenAssessment}
