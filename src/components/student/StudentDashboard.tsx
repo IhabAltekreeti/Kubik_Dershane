@@ -42,6 +42,9 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   const [selectedTaskAnswer, setSelectedTaskAnswer] = useState<string | null>(null);
   const [taskAnswerChecked, setTaskAnswerChecked] = useState(false);
   const [reviewConfirmed, setReviewConfirmed] = useState(false);
+  const [isMiniExamOpen, setIsMiniExamOpen] = useState(false);
+  const [miniExamAnswers, setMiniExamAnswers] = useState<Record<number, string>>({});
+  const [miniExamSubmitted, setMiniExamSubmitted] = useState(false);
 
   useEffect(() => {
     setSelectedTaskAnswer(null);
@@ -97,6 +100,16 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   const activeLoopNextMastery = Math.min(100, activeLoopCurrentMastery + 8);
   const activeLoopSession = activeLoopBase ? { ...activeLoopBase, masteryUpdate: { previousMastery: activeLoopCurrentMastery, newMastery: activeLoopNextMastery, delta: activeLoopNextMastery - activeLoopCurrentMastery, auditLog: `Demo seansı tamamlandı. Başlangıç seviyesi %${activeLoopCurrentMastery}; doğrulama sorusu doğru yanıtlandığı için seviye %${activeLoopNextMastery} olarak güncellendi. Bu örnek ilerleme bu tarayıcıda öğrenciye özel saklanır.` } } : null;
   const currentSubject = subjectList.find(s => s.id === selectedSubjectId) || subjectList[0];
+  const miniExamQuestions = student.track === 'LGS' ? [
+    { question: '2⁻³ işleminin sonucu hangisidir?', options: [{ id: 'a', label: '−8', correct: false }, { id: 'b', label: '1/8', correct: true }, { id: 'c', label: '−1/8', correct: false }], explanation: 'Negatif üs, sayının çarpmaya göre tersini aldırır: 2⁻³ = 1/2³ = 1/8.' },
+    { question: '(-3)² işleminin sonucu kaçtır?', options: [{ id: 'a', label: '−9', correct: false }, { id: 'b', label: '6', correct: false }, { id: 'c', label: '9', correct: true }], explanation: 'Parantez içindeki −3 sayısının karesi (−3) × (−3) = 9 olur.' },
+    { question: 'Kuzey Yarım Küre’de 21 Haziran’da hangisi yaşanır?', options: [{ id: 'a', label: 'Yaz gündönümü; gündüz yılın en uzunudur.', correct: true }, { id: 'b', label: 'Kış gündönümü; gece yılın en uzunudur.', correct: false }, { id: 'c', label: 'Her yerde gece ve gündüz eşit olur.', correct: false }], explanation: '21 Haziran, Kuzey Yarım Küre’de yaz gündönümüdür.' }
+  ] : [
+    { question: 'y = f(−x), y = f(x) grafiğinin hangi dönüşümünü ifade eder?', options: [{ id: 'a', label: 'x eksenine göre yansıma', correct: false }, { id: 'b', label: 'y eksenine göre yansıma', correct: true }, { id: 'c', label: 'Orijine göre yansıma', correct: false }], explanation: 'x yerine −x yazmak, grafiği y eksenine göre yansıtır.' },
+    { question: 'Nehir genişliği ve kıyıya dik hız bileşeni sabitse, akıntı hızı geçiş süresini nasıl etkiler?', options: [{ id: 'a', label: 'Geçiş süresini değiştirmez; sürüklenmeyi etkiler.', correct: true }, { id: 'b', label: 'Geçiş süresini doğrudan iki katına çıkarır.', correct: false }, { id: 'c', label: 'Geçiş süresini sıfırlar.', correct: false }], explanation: 'Karşıya geçiş süresini kıyıya dik hız bileşeni belirler; akıntı sürüklenmeyi etkiler.' },
+    { question: 'y = ax² + bx + c parabolünün tepe noktasının x koordinatı hangisidir?', options: [{ id: 'a', label: 'b / 2a', correct: false }, { id: 'b', label: '−b / 2a', correct: true }, { id: 'c', label: '−c / b', correct: false }], explanation: 'Parabolün tepe noktasının x koordinatı x = −b/(2a) bağıntısıyla bulunur.' }
+  ];
+
   const completedTaskCount = tasks.filter(t => t.completed).length;
 
   return (
@@ -519,9 +532,9 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
         <div className="space-y-6">
           <div className="bg-white rounded-xl border border-slate-200 p-6">
             <h2 className="text-base font-bold text-slate-900 mb-1">Kurumsal Deneme ve Tarama Sınavları</h2>
-            <p className="text-xs text-slate-600 mb-6">
-              Kübik Dershanesi Türkiye geneli ve şube deneme sınavı sonuçları, soru dağılımı ve net karnesi
-            </p>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between mb-6"><p className="text-xs text-slate-600">
+              Örnek deneme sonuçları ve net analizi. Aşağıdaki kısa uygulama, prototipte sınav akışını deneyimlemek içindir.
+            </p><button onClick={() => { setMiniExamAnswers({}); setMiniExamSubmitted(false); setIsMiniExamOpen(true); }} className="shrink-0 rounded-md bg-indigo-900 px-4 py-2.5 text-xs font-bold text-white hover:bg-indigo-800">3 Soruluk Örnek Denemeyi Başlat</button></div>
 
             <div className="space-y-4">
               {student.recentExams.map(exam => (
@@ -585,6 +598,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
           onSwitchStudent={onSwitchStudent}
         />
       )}
+
+      {isMiniExamOpen && <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/70 p-4"><div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white p-6 shadow-xl"><div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-wider text-indigo-700">{student.track} · Örnek mini deneme</p><h2 className="mt-1 text-xl font-extrabold text-slate-900">3 Soruluk Kazanım Taraması</h2><p className="mt-1 text-xs text-slate-500">Bu kısa örnek, tam bir LGS/YKS denemesi veya resmî sınav değildir.</p></div><button onClick={() => setIsMiniExamOpen(false)} className="rounded-md border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700">Kapat</button></div><div className="mt-5 space-y-5">{miniExamQuestions.map((question, index) => <div key={index} className="rounded-lg border border-slate-200 p-4"><p className="text-sm font-semibold text-slate-900">{index + 1}. {question.question}</p><div className="mt-3 space-y-2">{question.options.map(option => { const selected = miniExamAnswers[index] === option.id; const showResult = miniExamSubmitted; return <button key={option.id} disabled={miniExamSubmitted} onClick={() => setMiniExamAnswers(prev => ({ ...prev, [index]: option.id }))} className={`w-full rounded-md border p-3 text-left text-xs ${showResult && option.correct ? 'border-emerald-500 bg-emerald-50 text-emerald-950' : selected ? 'border-indigo-400 bg-indigo-50 text-indigo-950' : 'border-slate-200 text-slate-700 hover:border-slate-300'}`}>{option.label}</button>; })}</div>{miniExamSubmitted && <p className="mt-3 text-xs leading-relaxed text-slate-700">{question.explanation}</p>}</div>)}</div>{miniExamSubmitted ? <div className="mt-5 rounded-lg border border-emerald-200 bg-emerald-50 p-4"><p className="text-sm font-bold text-emerald-950">Örnek sonuç: {miniExamQuestions.filter((question, index) => question.options.find(option => option.id === miniExamAnswers[index])?.correct).length} / {miniExamQuestions.length} doğru</p><p className="mt-1 text-xs text-emerald-900">Bu sonuç yalnızca bu mini denemeye aittir; öğrenci karnesinin resmî netlerine eklenmez.</p><button onClick={() => setIsMiniExamOpen(false)} className="mt-3 rounded-md bg-emerald-800 px-4 py-2 text-xs font-bold text-white">Sonucu Kapat</button></div> : <div className="mt-5 flex items-center justify-between gap-3"><span className="text-xs text-slate-500">{Object.keys(miniExamAnswers).length} / {miniExamQuestions.length} soru yanıtlandı</span><button disabled={Object.keys(miniExamAnswers).length !== miniExamQuestions.length} onClick={() => setMiniExamSubmitted(true)} className={`rounded-md px-4 py-2 text-xs font-bold ${Object.keys(miniExamAnswers).length === miniExamQuestions.length ? 'bg-indigo-900 text-white hover:bg-indigo-800' : 'cursor-not-allowed bg-slate-200 text-slate-400'}`}>Denemeyi Bitir</button></div>}</div></div>}
 
       {activeTopicPreview && <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-950/60 p-4"><div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl"><p className="text-xs font-bold uppercase tracking-wider text-indigo-700">Konu Raporu · {student.grade}. Sınıf {student.track}</p><h2 className="mt-2 text-lg font-bold text-slate-900">{activeTopicPreview.name}</h2><div className="mt-4 grid grid-cols-2 gap-3"><div className="rounded-lg bg-slate-50 p-3"><p className="text-xs text-slate-500">Kazanım puanı</p><p className="text-xl font-bold">%{activeTopicPreview.masteryLevel}</p></div><div className="rounded-lg bg-slate-50 p-3"><p className="text-xs text-slate-500">Soru doğruluğu</p><p className="text-xl font-bold">%{activeTopicPreview.accuracyRate.toFixed(1)}</p></div></div><p className="mt-4 text-sm leading-relaxed text-slate-700">{activeTopicPreview.diagnosedWeakness || activeTopicPreview.evidenceNotes || 'Bu konu için henüz ek bir öğretmen notu bulunmuyor.'}</p><p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs leading-relaxed text-amber-950">Bu konu için ayrı bir 6 adımlı etkileşimli ders henüz tanımlı değil. Bu ekran konu verilerini gösterir; tamamlanmış bir ders veya doğrulanmış yeni kazanım gibi davranmaz.</p><div className="mt-5 flex justify-end"><button onClick={() => setActiveTopicPreview(null)} className="rounded-md bg-indigo-900 px-4 py-2 text-xs font-bold text-white">Kapat</button></div></div></div>}
 
