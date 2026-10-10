@@ -42,7 +42,9 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   // Synchronize student-specific state when student changes
   useEffect(() => {
     setTasks(student.dailyTasks);
-    setSubjectList(student.subjects);
+    let savedMastery: Record<string, number> = {};
+    try { savedMastery = JSON.parse(window.localStorage.getItem(`kubik:mastery:${student.id}`) || '{}'); } catch { savedMastery = {}; }
+    setSubjectList(student.subjects.map(subject => ({ ...subject, topics: subject.topics.map(topic => savedMastery[topic.id] === undefined ? topic : { ...topic, masteryLevel: savedMastery[topic.id], status: savedMastery[topic.id] >= 85 ? 'mastered' : 'in_progress' }) })));
     setSelectedSubjectId(student.subjects[0]?.id || '');
     setActiveLearningLoopId(null);
     setActiveTaskId(null);
@@ -64,13 +66,14 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
 
   // Callback after completing loop
   const handleMasteryUpdated = (topicId: string, newScore: number) => {
-    setSubjectList(prev => prev.map(sub => ({
-      ...sub,
-      topics: sub.topics.map(top => top.id === topicId ? { ...top, masteryLevel: newScore, status: 'in_progress' } : top)
-    })));
+    setSubjectList(prev => prev.map(sub => ({ ...sub, topics: sub.topics.map(top => top.id === topicId ? { ...top, masteryLevel: newScore, status: newScore >= 85 ? 'mastered' : 'in_progress' } : top) })));
+    try { const saved = JSON.parse(window.localStorage.getItem(`kubik:mastery:${student.id}`) || '{}'); window.localStorage.setItem(`kubik:mastery:${student.id}`, JSON.stringify({ ...saved, [topicId]: newScore })); } catch (error) { console.warn('Demo mastery progress could not be saved locally.', error); }
   };
 
-  const activeLoopSession = activeLearningLoopId ? LEARNING_LOOP_SESSIONS[activeLearningLoopId] : null;
+  const activeLoopBase = activeLearningLoopId ? LEARNING_LOOP_SESSIONS[activeLearningLoopId] : null;
+  const activeLoopCurrentMastery = activeLoopBase ? subjectList.flatMap(subject => subject.topics).find(topic => topic.id === activeLoopBase.topicId)?.masteryLevel ?? activeLoopBase.masteryUpdate.previousMastery : 0;
+  const activeLoopNextMastery = Math.min(100, activeLoopCurrentMastery + 8);
+  const activeLoopSession = activeLoopBase ? { ...activeLoopBase, masteryUpdate: { previousMastery: activeLoopCurrentMastery, newMastery: activeLoopNextMastery, delta: activeLoopNextMastery - activeLoopCurrentMastery, auditLog: `Demo seansı tamamlandı. Başlangıç seviyesi %${activeLoopCurrentMastery}; doğrulama sorusu doğru yanıtlandığı için seviye %${activeLoopNextMastery} olarak güncellendi. Bu örnek ilerleme bu tarayıcıda öğrenciye özel saklanır.` } } : null;
   const currentSubject = subjectList.find(s => s.id === selectedSubjectId) || subjectList[0];
   const completedTaskCount = tasks.filter(t => t.completed).length;
 

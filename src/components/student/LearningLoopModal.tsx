@@ -34,6 +34,7 @@ export const LearningLoopModal: React.FC<LearningLoopModalProps> = ({
   const [selectedGuidedOption, setSelectedGuidedOption] = useState<string | null>(null);
   const [selectedAssessmentOption, setSelectedAssessmentOption] = useState<string | null>(null);
   const [assessmentCompleted, setAssessmentCompleted] = useState(false);
+  const [assessmentCorrect, setAssessmentCorrect] = useState(false);
   const [showWorkedSolution, setShowWorkedSolution] = useState(false);
   const [masteryApplied, setMasteryApplied] = useState(false);
 
@@ -48,6 +49,7 @@ export const LearningLoopModal: React.FC<LearningLoopModalProps> = ({
   const handleAssessmentSubmit = (optionId: string) => {
     setSelectedAssessmentOption(optionId);
     setAssessmentCompleted(true);
+    setAssessmentCorrect(Boolean(session.verificationAssessment.options.find(option => option.id === optionId)?.isCorrect));
   };
 
   const applyMasteryUpgrade = () => {
@@ -396,22 +398,15 @@ export const LearningLoopModal: React.FC<LearningLoopModalProps> = ({
                 </div>
               </div>
 
-              {assessmentCompleted && (
-                <div className="p-4 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 space-y-1">
-                  <div className="font-bold flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                    <span>Tebrikler! Mantıksal çıkarım başarıyla uygulandı.</span>
-                  </div>
-                  <p className="text-emerald-900">{session.verificationAssessment.explanation}</p>
-                </div>
-              )}
+              {assessmentCompleted && assessmentCorrect && <div className="p-4 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 space-y-1"><div className="font-bold flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-600" /><span>Doğru cevap. Kazanım güncellemesine geçebilirsin.</span></div><p className="text-emerald-900">{session.verificationAssessment.explanation}</p></div>}
+              {assessmentCompleted && !assessmentCorrect && <div className="p-4 rounded-lg bg-rose-50 border border-rose-200 text-xs text-rose-950 space-y-2"><p className="font-bold">Bu cevap doğru değil; kazanım puanı henüz güncellenmedi.</p><p>{session.verificationAssessment.explanation}</p><button onClick={() => { setSelectedAssessmentOption(null); setAssessmentCompleted(false); setAssessmentCorrect(false); }} className="rounded-md border border-rose-300 bg-white px-3 py-1.5 font-semibold text-rose-900">Yeniden dene</button></div>}
 
               <div className="flex items-center justify-between pt-2 border-t border-slate-100">
                 <span className="text-xs text-slate-400">
                   {assessmentCompleted ? 'Sonuç sisteme işlenmeye hazır.' : 'Lütfen doğru seçeneği işaretleyiniz.'}
                 </span>
                 <button
-                  disabled={!assessmentCompleted}
+                  disabled={!assessmentCorrect}
                   onClick={() => setActiveStep(5)}
                   className={`inline-flex items-center gap-1.5 px-4 py-2 font-semibold rounded-md transition-colors text-xs ${
                     assessmentCompleted 
