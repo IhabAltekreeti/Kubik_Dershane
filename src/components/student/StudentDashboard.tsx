@@ -41,7 +41,9 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
 
   // Synchronize student-specific state when student changes
   useEffect(() => {
-    setTasks(student.dailyTasks);
+    let savedTasks: DailyTask[] | null = null;
+    try { savedTasks = JSON.parse(window.localStorage.getItem(`kubik:tasks:${student.id}`) || 'null'); } catch { savedTasks = null; }
+    setTasks(Array.isArray(savedTasks) ? savedTasks : student.dailyTasks);
     let savedMastery: Record<string, number> = {};
     try { savedMastery = JSON.parse(window.localStorage.getItem(`kubik:mastery:${student.id}`) || '{}'); } catch { savedMastery = {}; }
     setSubjectList(student.subjects.map(subject => ({ ...subject, topics: subject.topics.map(topic => savedMastery[topic.id] === undefined ? topic : { ...topic, masteryLevel: savedMastery[topic.id], status: savedMastery[topic.id] >= 85 ? ('mastered' as const) : ('in_progress' as const) }) })));
@@ -559,7 +561,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
         />
       )}
 
-      {activeTaskId && (() => { const task = tasks.find(item => item.id === activeTaskId); if (!task) return null; return <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-950/60 p-4"><div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl"><p className="text-xs font-bold uppercase tracking-wider text-indigo-700">Görev Başlatıldı · Demo Etkinliği</p><h2 className="mt-2 text-lg font-bold text-slate-900">{task.title}</h2><p className="mt-3 text-sm leading-relaxed text-slate-600">{task.description}</p><div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4 text-xs leading-relaxed text-slate-700">{task.type === 'practice_quiz' ? 'Bu prototipte bu görev için ayrı bir soru seti henüz bağlanmadı. Görev akışını ve tamamlanma davranışını deneyebilirsiniz.' : 'Bu prototipte bu görev bir çalışma yönergesi olarak gösterilir. Gerçek içerik, ilgili öğretmen materyalleri bağlandığında sunulmalıdır.'}</div><div className="mt-5 flex justify-end gap-2"><button onClick={() => setActiveTaskId(null)} className="rounded-md border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-700">Vazgeç</button><button onClick={() => { setTasks(prev => prev.map(item => item.id === task.id ? { ...item, completed: true } : item)); setActiveTaskId(null); }} className="rounded-md bg-indigo-900 px-4 py-2 text-xs font-bold text-white">Görevi Bitir</button></div></div></div>; })()}
+      {activeTaskId && (() => { const task = tasks.find(item => item.id === activeTaskId); if (!task) return null; return <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-950/60 p-4"><div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl"><p className="text-xs font-bold uppercase tracking-wider text-indigo-700">Görev Başlatıldı · Demo Etkinliği</p><h2 className="mt-2 text-lg font-bold text-slate-900">{task.title}</h2><p className="mt-3 text-sm leading-relaxed text-slate-600">{task.description}</p><div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4 text-xs leading-relaxed text-slate-700">{task.type === 'practice_quiz' ? 'Bu prototipte bu görev için ayrı bir soru seti henüz bağlanmadı. Görev akışını ve tamamlanma davranışını deneyebilirsiniz.' : 'Bu prototipte bu görev bir çalışma yönergesi olarak gösterilir. Gerçek içerik, ilgili öğretmen materyalleri bağlandığında sunulmalıdır.'}</div><div className="mt-5 flex justify-end gap-2"><button onClick={() => setActiveTaskId(null)} className="rounded-md border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-700">Vazgeç</button><button onClick={() => { const nextTasks = tasks.map(item => item.id === task.id ? { ...item, completed: true } : item); setTasks(nextTasks); try { window.localStorage.setItem(`kubik:tasks:${student.id}`, JSON.stringify(nextTasks)); } catch (error) { console.warn('Demo task progress could not be saved locally.', error); } setActiveTaskId(null); }} className="rounded-md bg-indigo-900 px-4 py-2 text-xs font-bold text-white">Görevi Bitir</button></div></div></div>; })()}
 
       {/* Kübik Learning Loop Modal Instance */}
       {activeLoopSession && (
@@ -568,7 +570,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
           isOpen={!!activeLearningLoopId}
           onClose={() => setActiveLearningLoopId(null)}
           onMasteryUpdated={handleMasteryUpdated}
-          onCompleted={() => { if (activeLoopSession) setTasks(prev => prev.map(task => task.type === 'guided_concept' && task.topicId === activeLoopSession.topicId ? { ...task, completed: true } : task)); }}
+          onCompleted={() => { if (activeLoopSession) { const nextTasks = tasks.map(task => task.type === 'guided_concept' && task.topicId === activeLoopSession.topicId ? { ...task, completed: true } : task); setTasks(nextTasks); try { window.localStorage.setItem(`kubik:tasks:${student.id}`, JSON.stringify(nextTasks)); } catch (error) { console.warn('Demo task progress could not be saved locally.', error); } } }}
         />
       )}
 
