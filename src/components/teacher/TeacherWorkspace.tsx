@@ -25,6 +25,8 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({
   onSelectStudentProfile
 }) => {
   const [selectedClass, setSelectedClass] = useState<'8-A' | '11-SAY'>('8-A');
+  const [selectedSubject, setSelectedSubject] = useState<'Tümü' | 'Matematik' | 'Fen Bilimleri' | 'Fizik'>('Matematik');
+  const [reportStudent, setReportStudent] = useState<StudentProfile | null>(null);
   const [interventions, setInterventions] = useState<TeacherIntervention[]>(DEMO_TEACHER_INTERVENTIONS);
   const [activeTab, setActiveTab] = useState<'interventions' | 'class_overview' | 'weakness_matrix'>('interventions');
   const [selectedIntervention, setSelectedIntervention] = useState<TeacherIntervention | null>(null);
@@ -59,7 +61,7 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({
     setTeacherNoteInput('');
   };
 
-  const visibleInterventions = interventions.filter(item => selectedClass === '8-A' ? item.studentId === 'std_lgs_801' : item.studentId === 'std_yks_1101');
+  const visibleInterventions = interventions.filter(item => (selectedClass === '8-A' ? item.studentId === 'std_lgs_801' : item.studentId === 'std_yks_1101') && (selectedSubject === 'Tümü' || item.subject === selectedSubject));
   const pendingCount = visibleInterventions.filter(i => i.teacherStatus === 'pending').length;
 
   return (
@@ -103,6 +105,12 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({
                 11-Sayısal Şubesi (YKS)
               </button>
             </div>
+          </div>
+          <div className="mt-3 flex items-center gap-2 text-xs">
+            <label htmlFor="teacher-subject-filter" className="font-medium text-slate-500">Öğretmen branşı:</label>
+            <select id="teacher-subject-filter" value={selectedSubject} onChange={event => setSelectedSubject(event.target.value as typeof selectedSubject)} className="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-800">
+              <option value="Matematik">Matematik</option><option value="Fen Bilimleri">Fen Bilimleri</option><option value="Fizik">Fizik</option><option value="Tümü">Tüm branşlar (örnek)</option>
+            </select>
           </div>
         </div>
       </div>
@@ -316,7 +324,7 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({
               </div>
 
               <button
-                onClick={() => onSelectStudentProfile(DEMO_STUDENT_A_LGS)}
+                onClick={() => setReportStudent(DEMO_STUDENT_A_LGS)}
                 className="w-full py-2 bg-indigo-900 hover:bg-indigo-800 text-white font-bold rounded text-xs transition-colors"
               >
                 Kerem'in Detaylı Öğrenci Karnesini İncele →
@@ -354,7 +362,7 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({
               </div>
 
               <button
-                onClick={() => onSelectStudentProfile(DEMO_STUDENT_B_YKS)}
+                onClick={() => setReportStudent(DEMO_STUDENT_B_YKS)}
                 className="w-full py-2 bg-indigo-900 hover:bg-indigo-800 text-white font-bold rounded text-xs transition-colors"
               >
                 Selin'in Detaylı Öğrenci Karnesini İncele →
@@ -379,7 +387,7 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({
               { grade: 8, subject: 'Fen Bilimleri', topic: 'Katı ve Sıvı Basıncı Hesaplamaları', errorRate: 36, affectedStudents: 11, action: 'Laboratuvar simülasyon testi önerildi' },
               { grade: 11, subject: 'Matematik', topic: 'Fonksiyon Grafiğinde Öteleme & Simetri', errorRate: 45, affectedStudents: 16, action: 'Öğretmen incelemesine sunuldu' },
               { grade: 11, subject: 'Fizik', topic: 'İki Boyutta Sabit İvmeli Hareket (Atışlar)', errorRate: 38, affectedStudents: 12, action: 'Etüt önerisi oluşturuldu' }
-            ].filter(item => selectedClass === '8-A' ? item.grade === 8 : item.grade === 11).map((item, idx) => (
+            ].filter(item => (selectedClass === '8-A' ? item.grade === 8 : item.grade === 11) && (selectedSubject === 'Tümü' || item.subject === selectedSubject)).map((item, idx) => (
               <div key={idx} className="p-3.5 bg-slate-50 rounded-lg border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
                 <div>
                   <span className="font-bold text-slate-900 block">{item.grade}. Sınıf {item.subject}: {item.topic}</span>
@@ -400,6 +408,7 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({
         </div>
       )}
 
+    {reportStudent && <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4"><div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-xl bg-white p-6 shadow-xl"><div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-wider text-indigo-700">Öğretmen görünümü · örnek karne</p><h2 className="mt-1 text-xl font-extrabold text-slate-900">{reportStudent.name}</h2><p className="mt-1 text-xs text-slate-600">{reportStudent.grade}. Sınıf {reportStudent.track} · {reportStudent.targetGoal}</p></div><button onClick={() => setReportStudent(null)} className="rounded-md border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700">Kapat</button></div><div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4"><div className="rounded-lg bg-slate-50 p-3"><p className="text-xs text-slate-500">Kazanım</p><p className="text-xl font-bold">%{reportStudent.overallMastery}</p></div><div className="rounded-lg bg-slate-50 p-3"><p className="text-xs text-slate-500">Çözülen soru</p><p className="text-xl font-bold">{reportStudent.totalQuestionsSolved.toLocaleString('tr-TR')}</p></div><div className="rounded-lg bg-slate-50 p-3"><p className="text-xs text-slate-500">Haftalık süre</p><p className="text-xl font-bold">{reportStudent.weeklyStudyHours} sa</p></div><div className="rounded-lg bg-slate-50 p-3"><p className="text-xs text-slate-500">Doğruluk</p><p className="text-xl font-bold">%{reportStudent.overallAccuracyRate}</p></div></div><h3 className="mt-6 font-bold text-slate-900">Ders bazında durum</h3><div className="mt-2 overflow-x-auto"><table className="w-full text-xs text-left"><thead><tr className="border-b text-slate-500"><th className="py-2 pr-3">Ders</th><th className="py-2 pr-3">Kazanım</th><th className="py-2 pr-3">Çözülen</th><th className="py-2">Doğruluk</th></tr></thead><tbody>{reportStudent.subjects.map(subject => <tr key={subject.id} className="border-b border-slate-100"><td className="py-3 pr-3 font-semibold">{subject.name}</td><td className="py-3 pr-3">%{subject.averageMastery}</td><td className="py-3 pr-3">{subject.topics.reduce((sum, topic) => sum + topic.questionCount, 0)}</td><td className="py-3">{subject.topics.length ? Math.round(subject.topics.reduce((sum, topic) => sum + topic.accuracyRate, 0) / subject.topics.length) : 0}%</td></tr>)}</tbody></table></div><p className="mt-4 text-[11px] text-slate-500">Bu karne örnek verilerle oluşturulmuştur; buton sizi öğrenci hesabına yönlendirmez.</p></div></div>}
     </div>
   );
 };
