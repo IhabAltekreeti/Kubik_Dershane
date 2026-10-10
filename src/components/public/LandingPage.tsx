@@ -13,7 +13,7 @@ import {
   ChevronRight,
   Brain,
   Lightbulb,
-  Building,
+ 
   GraduationCap
 } from 'lucide-react';
 
@@ -390,7 +390,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           
           <div 
             onClick={() => onExploreRole('student')}
@@ -440,21 +440,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </span>
           </div>
 
-          <div 
-            onClick={() => onExploreRole('management')}
-            className="p-6 bg-white rounded-xl border border-slate-200 hover:border-indigo-400 cursor-pointer transition-all space-y-3 group"
-          >
-            <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-800 flex items-center justify-center font-bold">
-              <Building className="w-5 h-5" />
-            </div>
-            <h3 className="font-bold text-slate-900 text-base group-hover:text-indigo-900">Yönetim İçin</h3>
-            <p className="text-xs text-slate-600 leading-relaxed">
-              İlerleyen aşamalarda dijital öğrenme deneyimini nasıl geliştirebileceğimizi ve kurumun ihtiyaçlarına göre hangi özelliklerin öncelik taşıdığını değerlendirme.
-            </p>
-            <span className="text-xs font-bold text-indigo-900 flex items-center gap-1 pt-1">
-              <span>Gelişim Yol Haritası</span> →
-            </span>
-          </div>
 
         </div>
       </section>

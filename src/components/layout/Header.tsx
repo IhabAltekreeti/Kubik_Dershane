@@ -1,11 +1,10 @@
 import React from 'react';
-import { UserRole, EducationalTrack, StudentProfile } from '../../types';
+import { UserRole } from '../../types';
 import { 
   Compass, 
   GraduationCap, 
   Users, 
   HeartHandshake, 
-  TrendingUp, 
   Sparkles,
   BookOpen,
   ArrowRight
@@ -110,17 +109,6 @@ export const Header: React.FC<HeaderProps> = ({
               <span>Veli Portalı</span>
             </button>
 
-            <button
-              onClick={() => onSelectRole('management')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
-                currentRole === 'management'
-                  ? 'bg-white text-slate-950 shadow-xs border border-slate-200/60'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <TrendingUp className="w-3.5 h-3.5" />
-              <span>Yönetim & Büyüme</span>
-            </button>
           </nav>
 
           {/* Right Action: Free Assessment & Mobile Role Selector */}
@@ -170,14 +158,6 @@ export const Header: React.FC<HeaderProps> = ({
             }`}
           >
             Veli
-          </button>
-          <button
-            onClick={() => onSelectRole('management')}
-            className={`px-2.5 py-1 rounded-sm whitespace-nowrap font-medium ${
-              currentRole === 'management' ? 'bg-indigo-900 text-white' : 'text-slate-600'
-            }`}
-          >
-            Yönetim
           </button>
         </div>
       </div>

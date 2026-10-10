@@ -44,16 +44,11 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
     setTasks(student.dailyTasks);
     let savedMastery: Record<string, number> = {};
     try { savedMastery = JSON.parse(window.localStorage.getItem(`kubik:mastery:${student.id}`) || '{}'); } catch { savedMastery = {}; }
-    setSubjectList(student.subjects.map(subject => ({ ...subject, topics: subject.topics.map(topic => savedMastery[topic.id] === undefined ? topic : { ...topic, masteryLevel: savedMastery[topic.id], status: savedMastery[topic.id] >= 85 ? 'mastered' : 'in_progress' }) })));
+    setSubjectList(student.subjects.map(subject => ({ ...subject, topics: subject.topics.map(topic => savedMastery[topic.id] === undefined ? topic : { ...topic, masteryLevel: savedMastery[topic.id], status: savedMastery[topic.id] >= 85 ? ('mastered' as const) : ('in_progress' as const) }) })));
     setSelectedSubjectId(student.subjects[0]?.id || '');
     setActiveLearningLoopId(null);
     setActiveTaskId(null);
   }, [student.id, student.track]);
-
-  // Toggle task completion
-  const handleToggleTask = (taskId: string) => {
-    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, completed: !t.completed } : t));
-  };
 
   // Launch learning loop
   const handleLaunchLoop = (topicId: string) => {
@@ -287,17 +282,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                     }`}
                   >
                     <div className="flex items-start gap-3">
-                      <button
-                        onClick={() => handleToggleTask(task.id)}
-                        className="mt-0.5 text-slate-400 hover:text-indigo-700 transition-colors"
-                        title={task.completed ? 'Tamamlanmadı olarak işaretle' : 'Tamamlandı olarak işaretle'}
-                      >
-                        {task.completed ? (
-                          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                        ) : (
-                          <Circle className="w-4 h-4" />
-                        )}
-                      </button>
+                      <span className="mt-0.5 text-slate-400" title={task.completed ? 'Görev tamamlandı' : 'Görev bekliyor'}>{task.completed ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <Circle className="w-4 h-4" />}</span>
                       <div>
                         <div className="flex items-center gap-2 mb-0.5">
                           <span className="font-bold text-slate-900">{task.subjectName}</span>
@@ -583,7 +568,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
           isOpen={!!activeLearningLoopId}
           onClose={() => setActiveLearningLoopId(null)}
           onMasteryUpdated={handleMasteryUpdated}
-          onCompleted={() => { if (activeLoopSession) setTasks(prev => prev.map(task => task.topicId === activeLoopSession.topicId ? { ...task, completed: true } : task)); }}
+          onCompleted={() => { if (activeLoopSession) setTasks(prev => prev.map(task => task.type === 'guided_concept' && task.topicId === activeLoopSession.topicId ? { ...task, completed: true } : task)); }}
         />
       )}
 

@@ -403,7 +403,7 @@ export const LearningLoopModal: React.FC<LearningLoopModalProps> = ({
 
               <div className="flex items-center justify-between pt-2 border-t border-slate-100">
                 <span className="text-xs text-slate-400">
-                  {assessmentCompleted ? 'Sonuç sisteme işlenmeye hazır.' : 'Lütfen doğru seçeneği işaretleyiniz.'}
+                  {assessmentCorrect ? 'Doğru cevap; kazanım güncellemesine geçebilirsin.' : 'Kazanım güncellemesi için doğru cevap gereklidir.'}
                 </span>
                 <button
                   disabled={!assessmentCorrect}
