@@ -493,10 +493,10 @@ export const LearningLoopModal: React.FC<LearningLoopModalProps> = ({
               <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 text-xs">
                 <div className="flex items-center gap-2 text-slate-800 font-semibold mb-1">
                   <UserCheck className="w-4 h-4 text-emerald-600" />
-                  <span>Öğretmen ve Rehberlik Paneline Bilgi İletildi</span>
+                  <span>Demo ilerlemesi kaydedildi</span>
                 </div>
                 <p className="text-slate-600 leading-relaxed">
-                  Zümre başkanına bu konudaki gelişiminiz otomatik karne notu olarak kaydedildi. Bir sonraki kurumsal denemede bu kazanım öncelikli olarak izlenecektir.
+                  Bu prototipte kazanım puanı bu tarayıcıda öğrenciye özel saklanır. Gerçek öğretmen hesabına otomatik bildirim gönderilmez.
                 </p>
               </div>
 
