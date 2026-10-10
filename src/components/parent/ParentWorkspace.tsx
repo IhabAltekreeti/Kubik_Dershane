@@ -15,7 +15,7 @@ import {
 
 interface ParentWorkspaceProps {
   student: StudentProfile;
-  onSwitchStudent: (track: 'LGS' | 'YKS') => void;
+  onSwitchStudent?: (track: 'LGS' | 'YKS') => void;
 }
 
 export const ParentWorkspace: React.FC<ParentWorkspaceProps> = ({
@@ -42,26 +42,7 @@ export const ParentWorkspace: React.FC<ParentWorkspaceProps> = ({
             </p>
           </div>
 
-          {/* Student Toggle */}
-          <div className="flex items-center gap-2 text-xs">
-            <span className="text-slate-500">Öğrenci:</span>
-            <button
-              onClick={() => onSwitchStudent('LGS')}
-              className={`px-3 py-1.5 rounded-md font-semibold border transition-colors ${
-                student.track === 'LGS' ? 'bg-indigo-900 text-white border-indigo-900' : 'bg-slate-50 text-slate-700 border-slate-200'
-              }`}
-            >
-              Kerem (LGS)
-            </button>
-            <button
-              onClick={() => onSwitchStudent('YKS')}
-              className={`px-3 py-1.5 rounded-md font-semibold border transition-colors ${
-                student.track === 'YKS' ? 'bg-indigo-900 text-white border-indigo-900' : 'bg-slate-50 text-slate-700 border-slate-200'
-              }`}
-            >
-              Selin (YKS)
-            </button>
-          </div>
+          <span className="rounded-md bg-slate-100 px-3 py-2 text-xs text-slate-600">Örnek veli hesabı · {student.name}</span>
         </div>
       </div>
 
@@ -145,6 +126,11 @@ export const ParentWorkspace: React.FC<ParentWorkspaceProps> = ({
           </div>
         </div>
 
+        <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
+          <div><h2 className="text-base font-bold text-slate-900">Derslere Göre Genel Durum</h2><p className="text-xs text-slate-500 mt-1">Örnek rapordaki ders bazlı göstergeler</p></div>
+          <div className="overflow-x-auto"><table className="w-full text-xs text-left"><thead className="text-slate-500 border-b border-slate-200"><tr><th className="py-2 pr-3">Ders</th><th className="py-2 pr-3">Kazanım</th><th className="py-2 pr-3">Doğruluk</th><th className="py-2">Haftalık saat</th></tr></thead><tbody>{student.subjects.map(subject => <tr key={subject.id} className="border-b border-slate-100 last:border-0"><td className="py-3 pr-3 font-semibold text-slate-800">{subject.name}</td><td className="py-3 pr-3">%{subject.averageMastery}</td><td className="py-3 pr-3">{subject.topics.length ? Math.round(subject.topics.reduce((sum, topic) => sum + topic.accuracyRate, 0) / subject.topics.length) : 0}%</td><td className="py-3">{subject.completedHours} / {subject.weeklyGoalHours} sa</td></tr>)}</tbody></table></div>
+        </div>
+
         {/* Right Col: Teacher & Advisor Feedback + Home Guidance */}
         <div className="space-y-6">
           
@@ -163,9 +149,7 @@ export const ParentWorkspace: React.FC<ParentWorkspaceProps> = ({
                 <span>Bu Hafta</span>
               </div>
               <p className="leading-relaxed">
-                "{student.name} son 2 haftadır çalışma planına son derece sadık. Sınav kaygısı yönetimi gayet dengeli. 
-                Sadece akşam etütlerinde zorlandığı Matematik sorularında acele etmemesi konusunda konuştuk. 
-                Evde çalışma ortamının sessizliğini desteklediğiniz için teşekkür ederiz."
+                {student.track === 'LGS' ? "Kerem'in örnek raporunda Matematikte üslü ifadeler, Fen Bilimlerinde ise mevsimler ve iklim konuları öncelikli görünüyor. Bu hafta kısa ve düzenli tekrarlarla ilerlemesini desteklemenizi öneriyoruz." : "Selin'in örnek raporunda fonksiyon dönüşümleri ve bağıl hareket konuları öncelikli görünüyor. Çalışma planını sürdürülebilir tutması ve zorlandığı sorularda çözüm adımlarını açıklaması üzerinde duruluyor."}
               </p>
             </div>
 

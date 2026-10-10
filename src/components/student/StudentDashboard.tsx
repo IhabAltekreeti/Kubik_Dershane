@@ -36,6 +36,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   const [activeTab, setActiveTab] = useState<'overview' | 'subjects' | 'exams' | 'tutor'>('overview');
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>(student.subjects[0]?.id || '');
   const [activeLearningLoopId, setActiveLearningLoopId] = useState<string | null>(null);
+  const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [subjectList, setSubjectList] = useState(student.subjects);
 
   // Synchronize student-specific state when student changes
@@ -44,6 +45,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
     setSubjectList(student.subjects);
     setSelectedSubjectId(student.subjects[0]?.id || '');
     setActiveLearningLoopId(null);
+    setActiveTaskId(null);
   }, [student.id, student.track]);
 
   // Toggle task completion
@@ -317,15 +319,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                       </div>
                     </div>
 
-                    {task.type === 'guided_concept' && !task.completed && (
-                      <button
-                        onClick={() => handleLaunchLoop(task.topicId)}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-900 font-bold rounded text-xs transition-colors shrink-0"
-                      >
-                        <span>Başla</span>
-                        <ChevronRight className="w-3.5 h-3.5" />
-                      </button>
-                    )}
+                    {!task.completed && <button onClick={() => task.type === 'guided_concept' ? handleLaunchLoop(task.topicId) : setActiveTaskId(task.id)} className="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-900 font-bold rounded text-xs transition-colors shrink-0"><span>Başla</span><ChevronRight className="w-3.5 h-3.5" /></button>}
                   </div>
                 ))}
               </div>
@@ -577,6 +571,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
         />
       )}
 
+      {activeTaskId && (() => { const task = tasks.find(item => item.id === activeTaskId); if (!task) return null; return <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-950/60 p-4"><div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl"><p className="text-xs font-bold uppercase tracking-wider text-indigo-700">Görev Başlatıldı · Demo Etkinliği</p><h2 className="mt-2 text-lg font-bold text-slate-900">{task.title}</h2><p className="mt-3 text-sm leading-relaxed text-slate-600">{task.description}</p><div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4 text-xs leading-relaxed text-slate-700">{task.type === 'practice_quiz' ? 'Bu prototipte bu görev için ayrı bir soru seti henüz bağlanmadı. Görev akışını ve tamamlanma davranışını deneyebilirsiniz.' : 'Bu prototipte bu görev bir çalışma yönergesi olarak gösterilir. Gerçek içerik, ilgili öğretmen materyalleri bağlandığında sunulmalıdır.'}</div><div className="mt-5 flex justify-end gap-2"><button onClick={() => setActiveTaskId(null)} className="rounded-md border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-700">Vazgeç</button><button onClick={() => { setTasks(prev => prev.map(item => item.id === task.id ? { ...item, completed: true } : item)); setActiveTaskId(null); }} className="rounded-md bg-indigo-900 px-4 py-2 text-xs font-bold text-white">Görevi Bitir</button></div></div></div>; })()}
+
       {/* Kübik Learning Loop Modal Instance */}
       {activeLoopSession && (
         <LearningLoopModal
@@ -584,6 +580,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
           isOpen={!!activeLearningLoopId}
           onClose={() => setActiveLearningLoopId(null)}
           onMasteryUpdated={handleMasteryUpdated}
+          onCompleted={() => { if (activeLoopSession) setTasks(prev => prev.map(task => task.topicId === activeLoopSession.topicId ? { ...task, completed: true } : task)); }}
         />
       )}
 
