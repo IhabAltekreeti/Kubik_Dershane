@@ -566,7 +566,6 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
             const targetTopicId = student.track === 'LGS' ? 'top_lgs_uslu' : 'top_yks_fonk';
             handleMasteryUpdated(targetTopicId, newScore);
           }}
-          onSwitchStudent={onSwitchStudent}
         />
       )}
 
