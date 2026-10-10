@@ -52,13 +52,23 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
     setActiveTaskId(null);
   }, [student.id, student.track]);
 
-  // Launch learning loop
+  // Open a learning loop only when its content matches the selected topic.
+  // Topics without a dedicated loop fall back to their own task preview instead
+  // of accidentally opening the LGS/YKS loop for a different topic.
   const handleLaunchLoop = (topicId: string) => {
-    if (student.track === 'LGS') {
-      setActiveLearningLoopId('lgs_uslu_ifadeler');
-    } else {
-      setActiveLearningLoopId('yks_fonksiyon_simetri');
+    const matchingSession = Object.entries(LEARNING_LOOP_SESSIONS).find(([sessionId, session]) =>
+      session.track === student.track && (topicId === 'default' ? true : session.topicId === topicId)
+    );
+
+    if (matchingSession) {
+      setActiveTaskId(null);
+      setActiveLearningLoopId(matchingSession[0]);
+      return;
     }
+
+    const matchingTask = tasks.find(task => task.track === student.track && task.topicId === topicId);
+    setActiveLearningLoopId(null);
+    setActiveTaskId(matchingTask?.id ?? null);
   };
 
   // Callback after completing loop
