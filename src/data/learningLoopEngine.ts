@@ -39,9 +39,10 @@ export const LEARNING_LOOP_SESSIONS: Record<string, LearningLoopSession> = {
         'İpucu 3: (-4)⁻² ifadesinde üs çifttir ve parantez vardır.'
       ],
       workedSolution: [
-        'A seçeneği: (-2)⁻³ = 1 / (-2)³ = 1 / -8 = -1/8 olur. (Eğer +1/8 denildiyse yanlıştır)',
-        'B seçeneği: 4⁻² = 1 / 4² = 1/16\'dır. (Asla -16 veya -1/16 değildir)',
-        'C seçeneği: (-3)⁻² = 1 / (-3)² = 1 / 9\'dur. Parantez karesi pozitiftir!',
+        'A seçeneği: 2⁻⁴ = 1 / 2⁴ = 1/16 olur; -16 değildir.',
+        'B seçeneği: (-5)⁻¹ = 1 / (-5) = -1/5 olur; 5 değildir.',
+        'C seçeneği: (-3)⁻² = 1 / (-3)² = 1/9 olur. Doğru eşitlik budur.',
+        'D seçeneği: -4⁻² = -(4⁻²) = -1/16 olur; parantez olmadığı için sonuç pozitife dönmez.',
         'Doğru cevap C seçeneğidir.'
       ],
       options: [

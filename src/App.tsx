@@ -38,9 +38,7 @@ export default function App() {
       <Header
         currentRole={currentRole}
         onSelectRole={setCurrentRole}
-        activeStudent={activeStudent}
-        onSwitchTrack={handleSwitchTrack}
-        onOpenAssessment={() => setIsAssessmentOpen(true)}
+         onOpenAssessment={() => setIsAssessmentOpen(true)}
       />
 
       {/* Main Content Area */}

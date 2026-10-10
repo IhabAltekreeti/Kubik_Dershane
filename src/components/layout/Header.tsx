@@ -14,16 +14,12 @@ import {
 interface HeaderProps {
   currentRole: UserRole;
   onSelectRole: (role: UserRole) => void;
-  activeStudent: StudentProfile;
-  onSwitchTrack: (track: EducationalTrack) => void;
   onOpenAssessment: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   currentRole,
   onSelectRole,
-  activeStudent,
-  onSwitchTrack,
   onOpenAssessment
 }) => {
   return (
@@ -37,18 +33,7 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="text-slate-400 hidden sm:inline">·</span>
             <span className="text-slate-300 hidden sm:inline">Fiziksel Kampüs & Hibrit Dijital Akademi Prototipi</span>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-slate-400 text-[11px]">Aktif Öğrenci Profili:</span>
-            <button
-              onClick={() => onSwitchTrack(activeStudent.track === 'LGS' ? 'YKS' : 'LGS')}
-              className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-sm bg-slate-800 hover:bg-slate-700 text-amber-300 text-xs font-medium border border-slate-700 transition-colors"
-              title="Demo öğrenci profilini değiştir"
-            >
-              <span>{activeStudent.name}</span>
-              <span className="text-slate-400 text-[11px]">({activeStudent.grade}. Sınıf {activeStudent.track})</span>
-              <span className="text-slate-400 hover:text-white underline text-[10px] ml-1">Değiştir ⟲</span>
-            </button>
-          </div>
+          <span className="text-slate-300 text-[11px]">Prototip · Ekranlardaki öğrenci verileri örnektir</span>
         </div>
       </div>
 
@@ -148,29 +133,7 @@ export const Header: React.FC<HeaderProps> = ({
               <span>Ücretsiz Seviye Tespiti</span>
             </button>
 
-            {/* Track badge toggle */}
-            <div className="hidden md:flex items-center gap-1 bg-slate-100 p-0.5 rounded-md border border-slate-200 text-xs font-medium text-slate-600">
-              <button
-                onClick={() => onSwitchTrack('LGS')}
-                className={`px-2 py-1 rounded text-xs transition-colors ${
-                  activeStudent.track === 'LGS'
-                    ? 'bg-white font-bold text-indigo-900 shadow-xs'
-                    : 'hover:text-slate-900'
-                }`}
-              >
-                LGS (8)
-              </button>
-              <button
-                onClick={() => onSwitchTrack('YKS')}
-                className={`px-2 py-1 rounded text-xs transition-colors ${
-                  activeStudent.track === 'YKS'
-                    ? 'bg-white font-bold text-indigo-900 shadow-xs'
-                    : 'hover:text-slate-900'
-                }`}
-              >
-                YKS (11)
-              </button>
-            </div>
+ 
           </div>
         </div>
 

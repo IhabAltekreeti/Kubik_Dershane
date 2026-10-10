@@ -59,7 +59,8 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({
     setTeacherNoteInput('');
   };
 
-  const pendingCount = interventions.filter(i => i.teacherStatus === 'pending').length;
+  const visibleInterventions = interventions.filter(item => selectedClass === '8-A' ? item.studentId === 'std_lgs_801' : item.studentId === 'std_yks_1101');
+  const pendingCount = visibleInterventions.filter(i => i.teacherStatus === 'pending').length;
 
   return (
     <div className="space-y-6">
@@ -152,7 +153,7 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({
           </div>
 
           <div className="grid grid-cols-1 gap-4">
-            {interventions.map(item => {
+            {visibleInterventions.map(item => {
               const isPending = item.teacherStatus === 'pending';
               const isApproved = item.teacherStatus === 'approved';
               const isModified = item.teacherStatus === 'modified';
@@ -283,8 +284,8 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             
-            {/* Student 1 Card */}
-            <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-3">
+            {/* Show only the student belonging to the selected class */}
+            {selectedClass === '8-A' && <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <img 
@@ -320,10 +321,9 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({
               >
                 Kerem'in Detaylı Öğrenci Karnesini İncele →
               </button>
-            </div>
+            </div>}
 
-            {/* Student 2 Card */}
-            <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-3">
+            {selectedClass === '11-SAY' && <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <img 
@@ -359,7 +359,7 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({
               >
                 Selin'in Detaylı Öğrenci Karnesini İncele →
               </button>
-            </div>
+            </div>}
 
           </div>
         </div>
@@ -375,14 +375,14 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({
 
           <div className="space-y-3">
             {[
-              { topic: '8. Sınıf Matematik: Üslü İfadeler ve Bilimsel Gösterim', errorRate: 42, affectedStudents: 14, action: 'Zümre ortak soru çözüm saati planlandı' },
-              { topic: '8. Sınıf Fen: Katı ve Sıvı Basıncı Hesaplamaları', errorRate: 36, affectedStudents: 11, action: 'Laboratuvar simülasyon testi atandı' },
-              { topic: '11. Sınıf Matematik: Fonksiyon Grafiğinde Öteleme & Simetri', errorRate: 45, affectedStudents: 16, action: 'Kübik Öğrenme Döngüsü modülü zorunlu kılındı' },
-              { topic: '11. Sınıf Fizik: İki Boyutta Sabit İvmeli Hareket (Atışlar)', errorRate: 38, affectedStudents: 12, action: 'Hafta sonu etüt programına alındı' }
-            ].map((item, idx) => (
+              { grade: 8, subject: 'Matematik', topic: 'Üslü İfadeler ve Bilimsel Gösterim', errorRate: 42, affectedStudents: 14, action: 'Zümre ortak soru çözüm saati planlandı' },
+              { grade: 8, subject: 'Fen Bilimleri', topic: 'Katı ve Sıvı Basıncı Hesaplamaları', errorRate: 36, affectedStudents: 11, action: 'Laboratuvar simülasyon testi önerildi' },
+              { grade: 11, subject: 'Matematik', topic: 'Fonksiyon Grafiğinde Öteleme & Simetri', errorRate: 45, affectedStudents: 16, action: 'Öğretmen incelemesine sunuldu' },
+              { grade: 11, subject: 'Fizik', topic: 'İki Boyutta Sabit İvmeli Hareket (Atışlar)', errorRate: 38, affectedStudents: 12, action: 'Etüt önerisi oluşturuldu' }
+            ].filter(item => selectedClass === '8-A' ? item.grade === 8 : item.grade === 11).map((item, idx) => (
               <div key={idx} className="p-3.5 bg-slate-50 rounded-lg border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
                 <div>
-                  <span className="font-bold text-slate-900 block">{item.topic}</span>
+                  <span className="font-bold text-slate-900 block">{item.grade}. Sınıf {item.subject}: {item.topic}</span>
                   <span className="text-slate-500 text-[11px]">Şubede {item.affectedStudents} öğrencide eksik tespit edildi</span>
                 </div>
                 <div className="flex items-center gap-4">

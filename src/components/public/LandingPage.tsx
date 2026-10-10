@@ -47,12 +47,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </div>
 
               <h1 className="text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight leading-[1.15]">
-                Dershane Sınırlarını Aşan, <span className="text-indigo-900">Yapay Zeka Destekli</span> Hibrit Akademi.
+                Kübik Dershanesi için <span className="text-indigo-900">Akıllı Dijital Öğrenme Platformu</span>.
               </h1>
 
               <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-2xl">
-                Kübik Dershanesi'nin 25 yıllık sınav hazırlık birikimi, Türkiye genelinde 8. Sınıf LGS ve 11. Sınıf YKS öğrencilerine ulaşıyor. 
-                Her öğrencinin kavram açığını deneme sınavı delilleriyle tespit eden, adım adım telafi eden yeni nesil öğrenme mimarisi.
+                Kübik Dershanesi'nin eğitim çalışmalarını dijital ortamda desteklemek için tasarlanan bir platform prototipi. Öğrenciye özel çalışma planı, konu takibi ve rehberli soru çözümünü bir araya getirir. İlk örnekler LGS ve 11. sınıf düzeyindedir; platformun kapsamı bu iki sınıfla sınırlı değildir.
               </p>
 
               {/* Conversion Buttons */}
@@ -150,10 +149,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             Hedefe Özel Hazırlık Parkurları
           </span>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-            İki Ayrı Sınav, İki Özel Pedagojik Metodoloji
+            Farklı Sınıf Düzeylerine Uyum Sağlayan Öğrenme Deneyimi
           </h2>
           <p className="text-sm text-slate-600 mt-2">
-            Kübik Dijital Akademi hem liseye geçişteki 8. sınıf LGS hem de üniversiteye hazırlıktaki 11. sınıf YKS maratonunu müfredatın gerektirdiği derinlikle ele alır.
+            Platform, ortaokul ve lise düzeylerinde farklı ders ve kazanımlara uyarlanabilecek şekilde tasarlanıyor. Aşağıdaki iki kart, kapsamın tamamını değil, prototipte gösterilen örnek öğrenci deneyimlerini anlatır.
           </p>
 
           {/* Track Switcher Tabs */}
@@ -186,7 +185,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-xs">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="space-y-4">
-                <span className="text-xs font-bold text-indigo-700 uppercase tracking-wider">LGS Parkuru Hedefi</span>
+                <span className="text-xs font-bold text-indigo-700 uppercase tracking-wider">Ortaokul · LGS Örneği</span>
                 <h3 className="text-xl font-bold text-slate-900">
                   Fen Liseleri ve Nitelikli Anadolu Liseleri Hedefi
                 </h3>
@@ -231,7 +230,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <div className="p-5 bg-indigo-50/60 rounded-xl border border-indigo-100 space-y-3 text-xs">
                 <h4 className="font-bold text-indigo-950">LGS Başarı Metrikleri</h4>
                 <p className="text-indigo-900">
-                  Öğrencilerimiz haftalık ortalama 75+ net projeksiyonuna ulaşmakta; zayıf konular her hafta 15 dakikalık Kübik Öğrenme Döngüleri ile kapatılmaktadır.
+                  Bu bölüm örnek bir öğrenci ekranını gösterir. Gerçek öğrenci başarı ortalamaları ve net artışları, yeterli kurum verisi toplandıktan sonra ayrıca raporlanmalıdır.
                 </p>
                 <div className="pt-2 border-t border-indigo-200/60">
                   <span className="font-semibold text-indigo-900 block mb-1">Örnek Öğrenci:</span>
@@ -244,7 +243,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-xs">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="space-y-4">
-                <span className="text-xs font-bold text-indigo-700 uppercase tracking-wider">YKS Parkuru Hedefi</span>
+                <span className="text-xs font-bold text-indigo-700 uppercase tracking-wider">Lise · YKS Örneği</span>
                 <h3 className="text-xl font-bold text-slate-900">
                   11. Sınıfta Temel Atarak İlk 5.000 Sıralaması
                 </h3>
@@ -289,7 +288,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <div className="p-5 bg-indigo-50/60 rounded-xl border border-indigo-100 space-y-3 text-xs">
                 <h4 className="font-bold text-indigo-950">YKS Başarı Metrikleri</h4>
                 <p className="text-indigo-900">
-                  Selin gibi öğrencilerimiz 11. sınıfta TYT'de 90+ net seviyesini korurken, AYT'de en zorlayıcı mekanik ve analitik fonksiyon konularında net kaybını sıfırlamaktadır.
+                  Bu kart, 11. sınıf öğrencisi için örnek bir çalışma alanını gösterir; burada yer alan hedefler ve sonuçlar gerçek kurum ortalaması değildir.
                 </p>
                 <div className="pt-2 border-t border-indigo-200/60">
                   <span className="font-semibold text-indigo-900 block mb-1">Örnek Öğrenci:</span>
@@ -384,10 +383,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto mb-12">
           <span className="text-xs font-bold uppercase tracking-wider text-indigo-700 block mb-1">
-            Ekosistem Paydaşları
+            Platformda Neler Var?
           </span>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-            Herkes İçin Anlamlı ve Güvenilir Bir Deneyim
+            Öğrenme, Takip ve Rehberlik Aynı Yerde
           </h2>
         </div>
 
@@ -450,10 +449,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
             <h3 className="font-bold text-slate-900 text-base group-hover:text-indigo-900">Yönetim İçin</h3>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Fiziksel bina kontenjanının ötesine geçerek hibrit ve online abonelikle ölçeklenme; Türkiye geneli öğrenciye ulaşma.
+              İlerleyen aşamalarda dijital öğrenme deneyimini nasıl geliştirebileceğimizi ve kurumun ihtiyaçlarına göre hangi özelliklerin öncelik taşıdığını değerlendirme.
             </p>
             <span className="text-xs font-bold text-indigo-900 flex items-center gap-1 pt-1">
-              <span>Yönetim Masası</span> →
+              <span>Gelişim Yol Haritası</span> →
             </span>
           </div>
 
