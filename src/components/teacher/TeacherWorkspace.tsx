@@ -25,7 +25,7 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({
   onSelectStudentProfile
 }) => {
   const [selectedClass, setSelectedClass] = useState<'8-A' | '11-SAY'>('8-A');
-  const [selectedSubject, setSelectedSubject] = useState<'Tümü' | 'Matematik' | 'Fen Bilimleri' | 'Fizik'>('Matematik');
+  const [selectedSubject, setSelectedSubject] = useState<'Tümü' | 'Matematik' | 'Fen Bilimleri' | 'Fizik'>('Tümü');
   const [reportStudent, setReportStudent] = useState<StudentProfile | null>(null);
   const [interventions, setInterventions] = useState<TeacherIntervention[]>(DEMO_TEACHER_INTERVENTIONS);
   const [activeTab, setActiveTab] = useState<'interventions' | 'class_overview' | 'weakness_matrix'>('interventions');
@@ -107,9 +107,9 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({
             </div>
           </div>
           <div className="mt-3 flex items-center gap-2 text-xs">
-            <label htmlFor="teacher-subject-filter" className="font-medium text-slate-500">Öğretmen branşı:</label>
+            <label htmlFor="teacher-subject-filter" className="font-medium text-slate-500">Branş görünümü:</label>
             <select id="teacher-subject-filter" value={selectedSubject} onChange={event => setSelectedSubject(event.target.value as typeof selectedSubject)} className="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-800">
-              <option value="Matematik">Matematik</option><option value="Fen Bilimleri">Fen Bilimleri</option><option value="Fizik">Fizik</option><option value="Tümü">Tüm branşlar (örnek)</option>
+              <option value="Matematik">Matematik</option><option value="Fen Bilimleri">Fen Bilimleri</option><option value="Fizik">Fizik</option><option value="Tümü">Şube özeti · tüm branşlar</option>
             </select>
           </div>
         </div>
