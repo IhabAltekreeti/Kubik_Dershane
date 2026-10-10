@@ -165,7 +165,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              8. Sınıf · LGS Hazırlık Parkuru
+              Ortaokul · LGS (8. sınıf örnek akışı)
             </button>
             <button
               onClick={() => setSelectedTrackTab('YKS')}
@@ -175,7 +175,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              11. Sınıf · YKS (TYT / AYT) Parkuru
+              Lise · YKS (11. sınıf örnek akışı)
             </button>
           </div>
         </div>
@@ -245,10 +245,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <div className="space-y-4">
                 <span className="text-xs font-bold text-indigo-700 uppercase tracking-wider">Lise · YKS Örneği</span>
                 <h3 className="text-xl font-bold text-slate-900">
-                  11. Sınıfta Temel Atarak İlk 5.000 Sıralaması
+                  Lise Döneminde TYT Temeli ve AYT Birikimi
                 </h3>
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  12. sınıfta panik yaşamamak için 11. sınıf AYT konularının (Mekanik, Fonksiyonlar, Trigonometri) tam olarak halledilmesi gerekir. Kübik, TYT temposunu korurken 11. sınıf AYT temelini zirveye taşır.
+                  Lise boyunca ders kazanımlarını düzenli takip etmek, TYT temelini korumak ve AYT konularını aşamalı biçimde güçlendirmek hedeflenir. Bu örnek akış, 11. sınıf öğrencisinin nasıl desteklenebileceğini gösterir; belirli bir sıralama veya sonuç garantisi vermez.
                 </p>
                 <div className="pt-2">
                   <button
