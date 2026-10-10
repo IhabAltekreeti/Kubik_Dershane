@@ -39,6 +39,15 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [subjectList, setSubjectList] = useState(student.subjects);
   const [activeTopicPreview, setActiveTopicPreview] = useState<TopicProgress | null>(null);
+  const [selectedTaskAnswer, setSelectedTaskAnswer] = useState<string | null>(null);
+  const [taskAnswerChecked, setTaskAnswerChecked] = useState(false);
+  const [reviewConfirmed, setReviewConfirmed] = useState(false);
+
+  useEffect(() => {
+    setSelectedTaskAnswer(null);
+    setTaskAnswerChecked(false);
+    setReviewConfirmed(false);
+  }, [activeTaskId]);
 
   // Synchronize student-specific state when student changes
   useEffect(() => {
@@ -579,7 +588,33 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
 
       {activeTopicPreview && <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-950/60 p-4"><div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl"><p className="text-xs font-bold uppercase tracking-wider text-indigo-700">Konu Raporu · {student.grade}. Sınıf {student.track}</p><h2 className="mt-2 text-lg font-bold text-slate-900">{activeTopicPreview.name}</h2><div className="mt-4 grid grid-cols-2 gap-3"><div className="rounded-lg bg-slate-50 p-3"><p className="text-xs text-slate-500">Kazanım puanı</p><p className="text-xl font-bold">%{activeTopicPreview.masteryLevel}</p></div><div className="rounded-lg bg-slate-50 p-3"><p className="text-xs text-slate-500">Soru doğruluğu</p><p className="text-xl font-bold">%{activeTopicPreview.accuracyRate.toFixed(1)}</p></div></div><p className="mt-4 text-sm leading-relaxed text-slate-700">{activeTopicPreview.diagnosedWeakness || activeTopicPreview.evidenceNotes || 'Bu konu için henüz ek bir öğretmen notu bulunmuyor.'}</p><p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs leading-relaxed text-amber-950">Bu konu için ayrı bir 6 adımlı etkileşimli ders henüz tanımlı değil. Bu ekran konu verilerini gösterir; tamamlanmış bir ders veya doğrulanmış yeni kazanım gibi davranmaz.</p><div className="mt-5 flex justify-end"><button onClick={() => setActiveTopicPreview(null)} className="rounded-md bg-indigo-900 px-4 py-2 text-xs font-bold text-white">Kapat</button></div></div></div>}
 
-      {activeTaskId && (() => { const task = tasks.find(item => item.id === activeTaskId); if (!task) return null; return <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-950/60 p-4"><div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl"><p className="text-xs font-bold uppercase tracking-wider text-indigo-700">Görev Başlatıldı · Demo Etkinliği</p><h2 className="mt-2 text-lg font-bold text-slate-900">{task.title}</h2><p className="mt-3 text-sm leading-relaxed text-slate-600">{task.description}</p><div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4 text-xs leading-relaxed text-slate-700">{task.type === 'practice_quiz' ? 'Bu prototipte bu görev için ayrı bir soru seti henüz bağlanmadı. Görev akışını ve tamamlanma davranışını deneyebilirsiniz.' : 'Bu prototipte bu görev bir çalışma yönergesi olarak gösterilir. Gerçek içerik, ilgili öğretmen materyalleri bağlandığında sunulmalıdır.'}</div><div className="mt-5 flex justify-end gap-2"><button onClick={() => setActiveTaskId(null)} className="rounded-md border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-700">Vazgeç</button><button onClick={() => { const nextTasks = tasks.map(item => item.id === task.id ? { ...item, completed: true } : item); setTasks(nextTasks); try { window.localStorage.setItem(`kubik:tasks:${student.id}`, JSON.stringify(nextTasks)); } catch (error) { console.warn('Demo task progress could not be saved locally.', error); } setActiveTaskId(null); }} className="rounded-md bg-indigo-900 px-4 py-2 text-xs font-bold text-white">Görevi Bitir</button></div></div></div>; })()}
+      {activeTaskId && (() => {
+        const task = tasks.find(item => item.id === activeTaskId);
+        if (!task) return null;
+        const quizByTask: Record<string, { question: string; options: { id: string; label: string; correct: boolean }[]; explanation: string }> = {
+          task_lgs_2: { question: 'Kuzey Yarım Küre’de 21 Haziran tarihinde hangi durum yaşanır?', options: [{ id: 'a', label: 'Kış başlar ve gündüzler kısalır.', correct: false }, { id: 'b', label: 'Yaz başlar ve gündüz süresi yılın en uzun seviyesine ulaşır.', correct: true }, { id: 'c', label: 'Gece ve gündüz her yerde eşit olur.', correct: false }], explanation: '21 Haziran, Kuzey Yarım Küre’de yaz gündönümüdür; gündüz süresi en uzundur.' },
+          task_lgs_3: { question: 'Bir paragrafta ana düşünceyi bulmak için en doğru yaklaşım hangisidir?', options: [{ id: 'a', label: 'Sadece ilk cümleyi ezberlemek.', correct: false }, { id: 'b', label: 'Paragrafın tamamını dikkate alıp yazarın asıl mesajını belirlemek.', correct: true }, { id: 'c', label: 'En uzun cümleyi seçmek.', correct: false }], explanation: 'Ana düşünce, paragrafın bütününden çıkarılan temel mesajdır.' },
+          task_yks_2: { question: 'Nehir genişliği ve yüzücünün kıyıya dik hız bileşeni sabitse, akıntı hızı karşı kıyıya geçiş süresini nasıl etkiler?', options: [{ id: 'a', label: 'Geçiş süresini doğrudan artırır.', correct: false }, { id: 'b', label: 'Geçiş süresini değiştirmez; sürüklenme mesafesini etkiler.', correct: true }, { id: 'c', label: 'Geçiş süresini sıfırlar.', correct: false }], explanation: 'Karşıya geçiş süresini kıyıya dik hız bileşeni belirler; akıntı ise aşağı yöndeki sürüklenmeyi değiştirir.' },
+          task_yks_3: { question: 'Bir paragraf sorusunda seçenekler arasında kaldığında hangi yöntem daha güvenilirdir?', options: [{ id: 'a', label: 'Metinde kanıtı olan ve paragrafın tamamını kapsayan seçeneği aramak.', correct: true }, { id: 'b', label: 'En iddialı görünen seçeneği seçmek.', correct: false }, { id: 'c', label: 'Kendi fikrime en yakın olanı seçmek.', correct: false }], explanation: 'Doğru seçenek metinle desteklenmeli; kişisel görüş veya aşırı genelleme belirleyici olmamalıdır.' }
+        };
+        const quiz = quizByTask[task.id];
+        const chosenOption = quiz?.options.find(option => option.id === selectedTaskAnswer);
+        const canComplete = task.type === 'practice_quiz' ? Boolean(taskAnswerChecked && chosenOption?.correct) : task.type === 'review' ? reviewConfirmed : true;
+        return <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-950/60 p-4">
+          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
+            <p className="text-xs font-bold uppercase tracking-wider text-indigo-700">Görev · Örnek öğrenci etkinliği</p>
+            <h2 className="mt-2 text-lg font-bold text-slate-900">{task.title}</h2>
+            <p className="mt-2 text-sm leading-relaxed text-slate-600">{task.description}</p>
+            {task.type === 'practice_quiz' && quiz ? <div className="mt-5 space-y-3">
+              <p className="text-sm font-semibold text-slate-900">{quiz.question}</p>
+              <div className="space-y-2">{quiz.options.map(option => <button key={option.id} onClick={() => { setSelectedTaskAnswer(option.id); setTaskAnswerChecked(true); }} className={`w-full rounded-lg border p-3 text-left text-xs transition-colors ${selectedTaskAnswer === option.id ? (option.correct ? 'border-emerald-500 bg-emerald-50 text-emerald-950' : 'border-rose-300 bg-rose-50 text-rose-950') : 'border-slate-200 bg-white text-slate-800 hover:border-slate-300'}`}>{option.label}</button>)}</div>
+              {taskAnswerChecked && <p className={`rounded-lg p-3 text-xs leading-relaxed ${chosenOption?.correct ? 'bg-emerald-50 text-emerald-900' : 'bg-rose-50 text-rose-900'}`}>{chosenOption?.correct ? 'Doğru cevap. ' : 'Bu seçenek doğru değil. Tekrar deneyebilirsin. '}{quiz.explanation}</p>}
+              <p className="text-[11px] text-slate-500">Bu, etkileşimi göstermek için hazırlanmış örnek sorudur; resmî sınav sorusu değildir.</p>
+            </div> : task.type === 'review' ? <label className="mt-5 flex items-start gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 text-xs leading-relaxed text-slate-700"><input type="checkbox" checked={reviewConfirmed} onChange={event => setReviewConfirmed(event.target.checked)} className="mt-0.5" /><span>Yanlış yaptığım soruları yeniden inceledim ve çözüm adımlarını gözden geçirdim.</span></label> : <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4 text-xs leading-relaxed text-slate-700">Bu görev için ayrı bir etkileşimli içerik henüz tanımlı değil. Bu nedenle bu ekranda sınav sonucu veya kazanım artışı üretilmez.</div>}
+            <div className="mt-5 flex justify-end gap-2"><button onClick={() => setActiveTaskId(null)} className="rounded-md border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-700">Kapat</button><button disabled={!canComplete} onClick={() => { const nextTasks = tasks.map(item => item.id === task.id ? { ...item, completed: true } : item); setTasks(nextTasks); try { window.localStorage.setItem(`kubik:tasks:${student.id}`, JSON.stringify(nextTasks)); } catch (error) { console.warn('Demo task progress could not be saved locally.', error); } setActiveTaskId(null); }} className={`rounded-md px-4 py-2 text-xs font-bold ${canComplete ? 'bg-indigo-900 text-white hover:bg-indigo-800' : 'cursor-not-allowed bg-slate-200 text-slate-400'}`}>Görevi Tamamla</button></div>
+          </div>
+        </div>;
+      })()}
 
       {/* Kübik Learning Loop Modal Instance */}
       {activeLoopSession && (
