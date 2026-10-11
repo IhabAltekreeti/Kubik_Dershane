@@ -21,7 +21,16 @@ jobs:
       - name: Install dependencies
         run: npm install
       - name: Build frontend
-        run: npm run build
+        run: set -o pipefail; npm run build 2>&1 | tee build-output.log
+      - name: Publish build diagnostics
+        if: failure()
+        run: |
+          if [ -f build-output.log ]; then
+            echo '### Build diagnostics' >> "$GITHUB_STEP_SUMMARY"
+            echo '```text' >> "$GITHUB_STEP_SUMMARY"
+            cat build-output.log >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi
       - name: Type-check project
         run: npm run lint
       - name: Run integrity tests
