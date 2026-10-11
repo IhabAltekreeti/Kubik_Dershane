@@ -14,16 +14,16 @@ const questionBank = {
   LGS: [
     {
       title: 'Üslü ifadeler',
-      prompt: 'Bir sayının kendisiyle 4 kez çarpımı aşağıdakilerden hangisiyle gösterilir?',
-      options: ['4 × a', 'a⁴', 'a + 4', 'a ÷ 4'],
+      prompt: 'İki deney tüpündeki bakteri sayıları başlangıçta sırasıyla 2⁹ ve 8⁴. Bir saat sonra birinci tüp 4 katına, ikinci tüp 8 katına çıkıyor. Birinci tüpteki sayının ikinci tüpteki sayıya oranı kaçtır?',
+      options: ['1 / 32  (2⁻⁵)', '1 / 16  (2⁻⁴)', '1 / 8  (2⁻³)', '1 / 4  (2⁻²)'],
       answer: 1,
-      explanation: 'Bir sayının kendisiyle çarpımı üslü ifade ile gösterilir. a sayısı 4 kez çarpılıyorsa a × a × a × a = a⁴ olur.',
-      source: 'Demo için hazırlanmış örnek soru · Resmî sınav sorusu değildir',
+      explanation: 'Birinci tüp: 2⁹ × 4 = 2⁹ × 2² = 2¹¹. İkinci tüp: 8⁴ × 8 = (2³)⁴ × 2³ = 2¹² × 2³ = 2¹⁵. Oran 2¹¹ / 2¹⁵ = 2⁻⁴ = 1/16 olur.',
+      source: 'MEB ÖDSGM · 2018–2019 8. sınıf matematik resmî örnek sorusu',
       misconceptions: [
-        '4 × a, 4 ile a sayısının çarpımını gösterir. Soruda ise a sayısının kendisiyle dört kez çarpılması isteniyor.',
+        'Üsleri çıkarırken 2⁹ ve 8⁴ ifadelerini önce aynı tabana çevirelim. 8⁴ = (2³)⁴ = 2¹² olur; sonra ikinci tüpün 8 katına çıkmasını da hesaba katmalıyız.',
         '',
-        'a + 4 toplama anlamına gelir. Aynı sayının tekrar tekrar çarpılması farklı bir gösterimdir.',
-        'a ÷ 4 bölme anlamına gelir; sorudaki işlem bölme değil, tekrarlı çarpmadır.'
+        'İkinci tüpün son hâli 8⁴ × 8 = 2¹⁵ olur. Birinci tüp 2¹¹ olduğundan oran 2¹¹ / 2¹⁵ = 2⁻⁴ olur.',
+        'İki tüpün de bir saat sonraki sayısını hesaplayıp birinciyi ikinciye bölmeliyiz. Birinci tüp 2¹¹, ikinci tüp 2¹⁵ olur; oran 1/16’dır.'
       ]
     },
     {
@@ -97,7 +97,7 @@ export default function App() {
   const [showRoleMenu, setShowRoleMenu] = useState(false);
 
   const question = questionBank[track][retryMode ? 1 : 0];
-  const equation = track === 'LGS' ? (retryMode ? '3² + 2' : 'a × a × a × a') : (retryMode ? 'g(2) = 2² − 1' : 'f(3) = 2 × 3 + 1');
+  const equation = track === 'LGS' ? (retryMode ? '3² + 2' : '2¹¹ ÷ 2¹⁵') : (retryMode ? 'g(2) = 2² − 1' : 'f(3) = 2 × 3 + 1');
 
   const student = track === 'LGS'
     ? { name: 'Kerem Demir', grade: '8. sınıf', exam: 'LGS hazırlık', initials: 'KD', goal: 'Üslü ifadeleri pekiştirmek' }
@@ -232,7 +232,7 @@ export default function App() {
       <button className="back-link" onClick={() => setPage('overview')}><ArrowRight className="back-arrow" size={15} /> Genel bakışa dön</button>
       <div className="practice-title"><div><div className="eyebrow">KISA KONU KONTROLÜ · {track}</div><h1>Birlikte düşünelim.</h1><p className="muted">Bu sorunun amacı sadece doğru cevabı bulmak değil, düşünme adımını anlamak.</p></div><div className="question-counter"><span>{retryMode ? '02' : '01'}</span><small>/ 03</small></div></div>
       <div className="question-layout"><section className="panel question-panel"><div className="question-meta"><span className="subject-tag"><BookOpen size={14} /> Matematik</span><span className="difficulty">Temel seviye</span></div><h2>{question.title}</h2><p className="question-prompt">{question.prompt}</p><div className="math-example">{equation} <span>= ?</span></div><div className="options-list">{question.options.map((option, index) => <button key={option} disabled={submitted} className={'option-row ' + (selectedAnswer === index ? 'chosen ' : '') + (submitted && index === question.answer ? 'correct ' : '') + (submitted && selectedAnswer === index && index !== question.answer ? 'incorrect ' : '')} onClick={() => setSelectedAnswer(index)}><span className="option-letter">{String.fromCharCode(65 + index)}</span><span>{option}</span>{submitted && index === question.answer && <CheckCircle2 size={18} />}{submitted && selectedAnswer === index && index !== question.answer && <X size={18} />}</button>)}</div>
-      {!submitted ? <button className="button button-dark button-full" disabled={selectedAnswer === null} onClick={submitAnswer}>Cevabımı kontrol et <ArrowRight size={16} /></button> : <div className={'answer-feedback ' + (selectedAnswer === question.answer ? 'feedback-correct' : 'feedback-wrong')}><div className="feedback-title">{selectedAnswer === question.answer ? <CheckCircle2 size={19} /> : <Lightbulb size={19} />}{selectedAnswer === question.answer ? 'Doğru cevap!' : 'Buradan birlikte öğrenebiliriz.'}</div><p>{selectedAnswer !== null && selectedAnswer !== question.answer && question.misconceptions[selectedAnswer] ? question.misconceptions[selectedAnswer] : question.explanation}</p><div className="source-note"><ShieldCheck size={14} /> {question.source}</div><button className="button button-dark button-full" onClick={() => { if (!retryMode) { setRetryMode(true); setSelectedAnswer(null); setSubmitted(false); setPage('practice'); } else { setPage('tutor'); } }}>{retryMode ? 'AI öğretmenle devam et' : 'Benzer soruyla tekrar dene'} <ArrowRight size={16} /></button><button className="text-button" onClick={() => setPage('tutor')}>AI öğretmene sor <ArrowRight size={14} /></button></div>}
+      {!submitted ? <button className="button button-dark button-full" disabled={selectedAnswer === null} onClick={submitAnswer}>Cevabımı kontrol et <ArrowRight size={16} /></button> : <div className={'answer-feedback ' + (selectedAnswer === question.answer ? 'feedback-correct' : 'feedback-wrong')}><div className="feedback-title">{selectedAnswer === question.answer ? <CheckCircle2 size={19} /> : <Lightbulb size={19} />}{selectedAnswer === question.answer ? 'Doğru cevap!' : 'Buradan birlikte öğrenebiliriz.'}</div><p>{selectedAnswer !== null && selectedAnswer !== question.answer && question.misconceptions[selectedAnswer] ? question.misconceptions[selectedAnswer] : question.explanation}</p><div className="source-note"><ShieldCheck size={14} /> {question.source}{track === 'LGS' && !retryMode && <> · <a href="https://odsgm.meb.gov.tr/www/ornek-sorular/kategori/22" target="_blank" rel="noreferrer">Resmî kaynak</a></>}</div><button className="button button-dark button-full" onClick={() => { if (!retryMode) { setRetryMode(true); setSelectedAnswer(null); setSubmitted(false); setPage('practice'); } else { setPage('tutor'); } }}>{retryMode ? 'AI öğretmenle devam et' : 'Benzer soruyla tekrar dene'} <ArrowRight size={16} /></button><button className="text-button" onClick={() => setPage('tutor')}>AI öğretmene sor <ArrowRight size={14} /></button></div>}
       </section><aside className="panel question-side"><div className="side-icon"><Target size={20} /></div><h3>Bu çalışmada neyi keşfediyoruz?</h3><p>{track === 'LGS' ? 'Bir işlemi ezberlemek yerine, üslü ifadenin ne anlattığını kavramayı.' : 'Fonksiyonda verilen x değerini yerine koyup sonucu bulmayı.'}</p><div className="side-divider" /><div className="side-mini-row"><span className="side-mini-icon"><Clock3 size={16} /></span><span><strong>3–5 dakika</strong><small>Kısa konu kontrolü</small></span></div><div className="side-mini-row"><span className="side-mini-icon"><BrainCircuit size={16} /></span><span><strong>Sonraki adım kişiselleşir</strong><small>Cevabına göre yönlendirme</small></span></div></aside></div>
     </div>
   );
