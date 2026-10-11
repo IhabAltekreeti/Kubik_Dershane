@@ -33,7 +33,7 @@ function TutorMessage({ text }: { text: string }) {
   const slash = String.fromCharCode(92);
   const dollar = String.fromCharCode(36);
   const normalized = text.split(slash + '(').join(dollar).split(slash + ')').join(dollar);
-  const chunks = normalized.split(new RegExp('(' + dollar + '[^' + dollar + '\\n]+' + dollar + ')', 'g'));
+  const chunks = normalized.split(new RegExp('(\\\\$[^$\\\\n]+\\\\$)', 'g'));
   return <div className="tutor-rich-text">{chunks.map((chunk, index) => chunk.startsWith(dollar) && chunk.endsWith(dollar) && chunk.length > 2
     ? <span className="math-inline" key={index}>{formatMath(chunk.slice(1, -1))}</span>
     : <span key={index}>{renderPlainText(chunk)}</span>)}</div>;
