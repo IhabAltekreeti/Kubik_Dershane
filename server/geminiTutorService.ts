@@ -157,7 +157,7 @@ Türkçe, yaşa uygun ve anlaşılır anlat. Öğrenciye bir seferde tek bir kü
       const response = await ai.models.generateContent({
         model: 'gemini-3.8-flash',
         contents: fullPrompt,
-        config: { systemInstruction, temperature: 0.5 }
+        config: { systemInstruction }
       });
       return { message: response.text || 'Yanıt oluşturulamadı. Lütfen tekrar deneyin.' };
     } catch (err: any) {
