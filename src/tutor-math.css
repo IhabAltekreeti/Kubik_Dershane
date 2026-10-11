@@ -2,3 +2,4 @@
 .tutor-rich-text p{margin:0 0 9px}
 .tutor-rich-text p:last-child{margin-bottom:0}
 .tutor-rich-text .katex-display{overflow-x:auto;overflow-y:hidden;margin:9px 0;text-align:left}
+.math-inline{font-family:'Cambria Math','STIX Two Math',serif;white-space:nowrap;font-size:1.03em}
