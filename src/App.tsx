@@ -10,6 +10,7 @@ type Track = 'LGS' | 'YKS';
 type Role = 'student' | 'teacher' | 'parent' | 'center';
 type View = 'today' | 'practice' | 'coach' | 'progress';
 type ChatItem = { role: 'user' | 'assistant'; text: string };
+type AnswerResult = { correct: boolean; explanation: string; misconception?: string; repeated?: boolean; unverified?: boolean };
 type Option = { id: string; text: string };
 type Question = {
   id: string; track: Track; topic: string; prompt: string; options: Option[];
@@ -58,7 +59,7 @@ function App() {
   const [retryMode, setRetryMode] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
-  const [answerResult, setAnswerResult] = useState<{correct:boolean; explanation:string; misconception?:string; repeated?:boolean} | null>(null);
+  const [answerResult, setAnswerResult] = useState<AnswerResult | null>(null);
   const [progress, setProgress] = useState<number | null>(null);
   const [chat, setChat] = useState<ChatItem[]>([{role:'assistant',text:'Merhaba! Nerede takıldığını birlikte bulalım. İstersen sorudaki bir adımı yazabilir ya da aşağıdaki kısa sorulardan biriyle başlayabilirsin.'}]);
   const [chatInput, setChatInput] = useState('');
@@ -156,12 +157,13 @@ function App() {
         misconception = correct ? '' : (question.hints?.[0] || 'Önce ifadeleri aynı tabana çevirip üs kurallarını adım adım uygulayalım.');
         if (typeof d.updatedMastery?.currentMastery === 'number') setProgress(d.updatedMastery.currentMastery);
       } catch {
-        const optionIndex = question.options.findIndex(o=>o.id===selected);
-        correct = selected === 'B';
-        explanation = correct
-          ? 'Doğru cevap. Resmî değerlendirme servisine ulaşılamadığı için bu sonuç yalnızca ekranda değerlendirildi.'
-          : 'Bu yerel önizlemede seçimin doğru görünmüyor. Sunucu değerlendirmesi olmadan ilerleme kaydı oluşturulmadı.';
-        misconception = optionIndex >= 0 ? 'Önce iki ifadeyi aynı tabana çevir ve soruda hangi büyüklüğün oranlandığını kontrol et.' : '';
+        setAnswerResult({
+          correct: false,
+          unverified: true,
+          explanation: 'Sunucuya ulaşılamadığı için bu yanıt doğrulanamadı. Cevap anahtarını tahmin etmeyeceğiz ve ilerleme kaydı oluşturulmadı.',
+          misconception: ''
+        });
+        return;
       }
     } else if (local) {
       correct = selected === local.key;
@@ -277,7 +279,7 @@ function App() {
           <h2>{question.prompt}</h2>
           <div className="option-list">{question.options.map((option,index)=><button key={option.id} disabled={submitted} className={'answer-option '+(selected===option.id?'selected ':'')+(submitted && answerResult && option.id=== (question.verified?'B':localAnswer[question.id]?.key)?'answer-correct ':'')+(submitted && selected===option.id && answerResult && !answerResult.correct?'answer-wrong':'')} onClick={()=>setSelected(option.id)}><span className="option-letter">{String.fromCharCode(65+index)}</span><span>{option.text.replace(/^[A-D]\)\s*/,'')}</span>{selected===option.id&&<span className="option-check"><Check size={15}/></span>}</button>)}</div>
           {!submitted ? <div className="question-actions"><span className="helper-text"><CircleHelp size={14}/> Takılırsan AI çalışma arkadaşına sorabilirsin.</span><button className="button button-primary" disabled={!selected} onClick={submitAnswer}>Yanıtımı kontrol et <ArrowRight size={16}/></button></div> :
-          <div className={'feedback-panel '+(answerResult?.correct?'feedback-good':'feedback-try')}><div className="feedback-title">{answerResult?.correct?<CheckCircle2 size={19}/>:<Lightbulb size={19}/>}<div><strong>{answerResult?.correct?'Evet, doğru düşünüyorsun.':'Burada bir düşünme adımını yeniden inceleyelim.'}</strong><span>{answerResult?.correct?'Kuralı doğru uyguladın.':'Yanlış cevap bir ipucu; birlikte nerede ayrıldığını bulalım.'}</span></div></div>
+          <div className={'feedback-panel '+(answerResult?.correct?'feedback-good':'feedback-try')}><div className="feedback-title">{answerResult?.correct?<CheckCircle2 size={19}/>:<Lightbulb size={19}/>}<div><strong>{answerResult?.unverified?'Yanıt henüz doğrulanamadı.':answerResult?.correct?'Evet, doğru düşünüyorsun.':'Burada bir düşünme adımını yeniden inceleyelim.'}</strong><span>{answerResult?.unverified?'Bağlantı geri geldiğinde yeniden deneyebilirsin.':answerResult?.correct?'Kuralı doğru uyguladın.':'Yanlış cevap bir ipucu; birlikte nerede ayrıldığını bulalım.'}</span></div></div>
             <p>{answerResult?.correct?answerResult.explanation:(answerResult?.misconception||answerResult?.explanation)}</p>
             {answerResult?.repeated&&<small>Bu soru daha önce kaydedilmiş. Tekrar çözüm yeni ilerleme olarak sayılmadı.</small>}
             <div className="feedback-actions"><button className="button button-primary" onClick={()=>{setView('coach');setChatInput('Bu soruda '+(answerResult?.correct?'hangi kuralı kullandığımı':'hangi adımda hata yapmış olabileceğimi')+' adım adım anlatır mısın?')}}><MessageCircle size={15}/> Birlikte incele</button><button className="button button-secondary" onClick={startRetry}>Benzer soru çöz <ArrowRight size={15}/></button></div>
@@ -301,7 +303,7 @@ function App() {
           <div className="chat-messages">{chat.map((item,i)=><div key={i} className={'message-row '+(item.role==='user'?'message-user':'')}><div className="message-avatar">{item.role==='user'?student.initials:<Sparkles size={15}/>}</div><div className="message-bubble"><span className="message-author">{item.role==='user'?'Sen':'Öğrenme rehberi'}</span><p>{item.text}</p></div></div>)}{chatLoading&&<div className="message-row"><div className="message-avatar"><Sparkles size={15}/></div><div className="message-bubble typing"><span/><span/><span/></div></div>}<div ref={chatEnd}/></div>
           {chatError&&<div className="chat-error"><CircleHelp size={14}/>{chatError} <span>Gösterilen sabit ipucu canlı AI yanıtı değildir.</span></div>}
           <div className="suggestion-row"><button onClick={()=>void sendChat(track==='LGS'?'Üslerin üssü kuralını basit bir örnekle açıklar mısın?':'Fonksiyonlarda x yerine değer yazmak ne demek?')}>{track==='LGS'?'Üslerin üssü kuralı':'Fonksiyon nedir?'}</button><button onClick={()=>void sendChat('Bana cevabı söylemeden bir ipucu verir misin?')}>Bir ipucu ver</button><button onClick={()=>void sendChat('Küçük bir örnek üzerinden anlatır mısın?')}>Örnekle anlat</button></div>
-          <form className="chat-composer" onSubmit={e=>{e.preventDefault();void sendChat();}}><input value={chatInput} onChange={e=>setChatInput(e.target.value)} placeholder="Takıldığın adımı buraya yaz…" aria-label="AI çalışma arkadaşına mesaj" disabled={chatLoading}/><button className="send-button" type="submit" disabled={!chatInput.trim()||chatLoading} aria-label="Mesajı gönder"><Send size={17}/></button></form>
+          <form className="chat-composer" onSubmit={e=>{e.preventDefault();void sendChat();}}><input value={chatInput} onChange={e=>setChatInput(e.target.value)} placeholder="Takıldığın adımı buraya yaz…" aria-label="AI çalışma arkadaşına mesaj"/><button className="send-button" type="submit" disabled={!chatInput.trim()||chatLoading} aria-label="Mesajı gönder"><Send size={17}/></button></form>
           <p className="chat-disclaimer">AI yanıtları hata içerebilir. Önemli akademik kararlar için öğretmeninle kontrol et.</p>
         </section>
         <aside className="surface coach-context"><span className="eyebrow muted">ÇALIŞMA BAĞLAMI</span><h3>Bugünkü konun</h3><div className="context-topic"><div className="plan-icon indigo"><BookOpen size={18}/></div><div><strong>{track==='LGS'?'Üslü ifadeler':'Fonksiyonlar'}</strong><span>Matematik · {student.grade}</span></div></div><div className="context-divider"/><span className="eyebrow muted">İSTERSEN ŞUNU SOR</span><button className="prompt-card" onClick={()=>setChatInput('Bu konuyu 3 kısa adımda anlatır mısın?')}>Bu konuyu 3 kısa adımda anlat <ArrowRight size={15}/></button><button className="prompt-card" onClick={()=>setChatInput('Yanlış cevabım hangi düşünce hatasından kaynaklanmış olabilir?')}>Yanlışım ne anlatıyor olabilir? <ArrowRight size={15}/></button><div className="teacher-note"><Lightbulb size={16}/><p>Bir soruda uzun süre takılırsan, öğretmeninden destek istemek de iyi bir öğrenme adımıdır.</p></div></aside>
