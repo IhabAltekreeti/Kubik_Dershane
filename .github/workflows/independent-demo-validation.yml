@@ -24,3 +24,5 @@ jobs:
         run: npm run build
       - name: Type-check project
         run: npm run lint
+      - name: Run integrity tests
+        run: npm test
