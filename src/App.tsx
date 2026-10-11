@@ -18,7 +18,13 @@ const questionBank = {
       options: ['4 × a', 'a⁴', 'a + 4', 'a ÷ 4'],
       answer: 1,
       explanation: 'Bir sayının kendisiyle çarpımı üslü ifade ile gösterilir. a sayısı 4 kez çarpılıyorsa a × a × a × a = a⁴ olur.',
-      source: 'Demo için hazırlanmış örnek soru · Resmî sınav sorusu değildir'
+      source: 'Demo için hazırlanmış örnek soru · Resmî sınav sorusu değildir',
+      misconceptions: [
+        '4 × a, 4 ile a sayısının çarpımını gösterir. Soruda ise a sayısının kendisiyle dört kez çarpılması isteniyor.',
+        '',
+        'a + 4 toplama anlamına gelir. Aynı sayının tekrar tekrar çarpılması farklı bir gösterimdir.',
+        'a ÷ 4 bölme anlamına gelir; sorudaki işlem bölme değil, tekrarlı çarpmadır.'
+      ]
     },
     {
       title: 'Üslü ifadeler · tekrar',
@@ -26,7 +32,13 @@ const questionBank = {
       options: ['8', '9', '11', '18'],
       answer: 2,
       explanation: 'Önce üslü işlem yapılır: 3² = 3 × 3 = 9. Ardından 2 eklenir ve sonuç 11 olur.',
-      source: 'Demo için hazırlanmış tekrar sorusu · Resmî sınav sorusu değildir'
+      source: 'Demo için hazırlanmış tekrar sorusu · Resmî sınav sorusu değildir',
+      misconceptions: [
+        '3², 3 × 2 değil 3 × 3 demektir. Önce üslü işlemi hesaplayalım.',
+        '9, yalnızca 3² işleminin sonucu. Soruda buna 2 daha ekleniyor.',
+        '',
+        '18, 9 ile 2’yi çarpmış olabileceğini düşündürüyor. İfadede 9 ile 2 toplanıyor.'
+      ]
     }
   ],
   YKS: [
@@ -36,7 +48,13 @@ const questionBank = {
       options: ['5', '6', '7', '8'],
       answer: 2,
       explanation: 'f(3) değerini bulmak için x yerine 3 yazarız: f(3) = 2 × 3 + 1 = 7.',
-      source: 'Demo için hazırlanmış örnek soru · Resmî sınav sorusu değildir'
+      source: 'Demo için hazırlanmış örnek soru · Resmî sınav sorusu değildir',
+      misconceptions: [
+        '5 sonucunu bulduysan verilen ifadeyi ve işlem adımlarını tekrar kontrol edelim.',
+        '6, 2 × 3 işlemini yapıp sondaki +1 adımını atlamış olabileceğini düşündürebilir.',
+        '',
+        '8 sonucunu bulduysan x yerine 3 yazma ve çarpma adımını yeniden inceleyelim.'
+      ]
     },
     {
       title: 'Fonksiyonlar · tekrar',
@@ -44,7 +62,13 @@ const questionBank = {
       options: ['2', '3', '4', '5'],
       answer: 1,
       explanation: 'x yerine 2 yazılır: g(2) = 2² − 1 = 4 − 1 = 3.',
-      source: 'Demo için hazırlanmış tekrar sorusu · Resmî sınav sorusu değildir'
+      source: 'Demo için hazırlanmış tekrar sorusu · Resmî sınav sorusu değildir',
+      misconceptions: [
+        '2 sonucuna ulaştıysan çıkarma işlemini veya üs alma adımını yeniden kontrol edelim.',
+        '',
+        '4, yalnızca 2² işleminin sonucu. İfadede 1 çıkarma adımı da var.',
+        '5 sonucunu bulduysan çıkarma yerine toplama yapmış olabilirsin.'
+      ]
     }
   ]
 };
@@ -208,7 +232,7 @@ export default function App() {
       <button className="back-link" onClick={() => setPage('overview')}><ArrowRight className="back-arrow" size={15} /> Genel bakışa dön</button>
       <div className="practice-title"><div><div className="eyebrow">KISA KONU KONTROLÜ · {track}</div><h1>Birlikte düşünelim.</h1><p className="muted">Bu sorunun amacı sadece doğru cevabı bulmak değil, düşünme adımını anlamak.</p></div><div className="question-counter"><span>{retryMode ? '02' : '01'}</span><small>/ 03</small></div></div>
       <div className="question-layout"><section className="panel question-panel"><div className="question-meta"><span className="subject-tag"><BookOpen size={14} /> Matematik</span><span className="difficulty">Temel seviye</span></div><h2>{question.title}</h2><p className="question-prompt">{question.prompt}</p><div className="math-example">{equation} <span>= ?</span></div><div className="options-list">{question.options.map((option, index) => <button key={option} disabled={submitted} className={'option-row ' + (selectedAnswer === index ? 'chosen ' : '') + (submitted && index === question.answer ? 'correct ' : '') + (submitted && selectedAnswer === index && index !== question.answer ? 'incorrect ' : '')} onClick={() => setSelectedAnswer(index)}><span className="option-letter">{String.fromCharCode(65 + index)}</span><span>{option}</span>{submitted && index === question.answer && <CheckCircle2 size={18} />}{submitted && selectedAnswer === index && index !== question.answer && <X size={18} />}</button>)}</div>
-      {!submitted ? <button className="button button-dark button-full" disabled={selectedAnswer === null} onClick={submitAnswer}>Cevabımı kontrol et <ArrowRight size={16} /></button> : <div className={'answer-feedback ' + (selectedAnswer === question.answer ? 'feedback-correct' : 'feedback-wrong')}><div className="feedback-title">{selectedAnswer === question.answer ? <CheckCircle2 size={19} /> : <Lightbulb size={19} />}{selectedAnswer === question.answer ? 'Doğru cevap!' : 'Buradan birlikte öğrenebiliriz.'}</div><p>{question.explanation}</p><div className="source-note"><ShieldCheck size={14} /> {question.source}</div><button className="button button-dark button-full" onClick={() => { if (!retryMode) { setRetryMode(true); setSelectedAnswer(null); setSubmitted(false); setPage('practice'); } else { setPage('tutor'); } }}>{retryMode ? 'AI öğretmenle devam et' : 'Benzer soruyla tekrar dene'} <ArrowRight size={16} /></button><button className="text-button" onClick={() => setPage('tutor')}>AI öğretmene sor <ArrowRight size={14} /></button></div>}
+      {!submitted ? <button className="button button-dark button-full" disabled={selectedAnswer === null} onClick={submitAnswer}>Cevabımı kontrol et <ArrowRight size={16} /></button> : <div className={'answer-feedback ' + (selectedAnswer === question.answer ? 'feedback-correct' : 'feedback-wrong')}><div className="feedback-title">{selectedAnswer === question.answer ? <CheckCircle2 size={19} /> : <Lightbulb size={19} />}{selectedAnswer === question.answer ? 'Doğru cevap!' : 'Buradan birlikte öğrenebiliriz.'}</div><p>{selectedAnswer !== null && selectedAnswer !== question.answer && question.misconceptions[selectedAnswer] ? question.misconceptions[selectedAnswer] : question.explanation}</p><div className="source-note"><ShieldCheck size={14} /> {question.source}</div><button className="button button-dark button-full" onClick={() => { if (!retryMode) { setRetryMode(true); setSelectedAnswer(null); setSubmitted(false); setPage('practice'); } else { setPage('tutor'); } }}>{retryMode ? 'AI öğretmenle devam et' : 'Benzer soruyla tekrar dene'} <ArrowRight size={16} /></button><button className="text-button" onClick={() => setPage('tutor')}>AI öğretmene sor <ArrowRight size={14} /></button></div>}
       </section><aside className="panel question-side"><div className="side-icon"><Target size={20} /></div><h3>Bu çalışmada neyi keşfediyoruz?</h3><p>{track === 'LGS' ? 'Bir işlemi ezberlemek yerine, üslü ifadenin ne anlattığını kavramayı.' : 'Fonksiyonda verilen x değerini yerine koyup sonucu bulmayı.'}</p><div className="side-divider" /><div className="side-mini-row"><span className="side-mini-icon"><Clock3 size={16} /></span><span><strong>3–5 dakika</strong><small>Kısa konu kontrolü</small></span></div><div className="side-mini-row"><span className="side-mini-icon"><BrainCircuit size={16} /></span><span><strong>Sonraki adım kişiselleşir</strong><small>Cevabına göre yönlendirme</small></span></div></aside></div>
     </div>
   );
