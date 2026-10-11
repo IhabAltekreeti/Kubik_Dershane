@@ -1,316 +1,352 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ArrowDownRight, ArrowRight, ArrowUpRight, Award, BookOpen, BrainCircuit,
-  Check, CheckCircle2, ChevronDown, ChevronRight, CircleHelp, ClipboardCheck,
-  Clock3, Compass, GraduationCap, LayoutDashboard, Lightbulb, MessageCircle,
-  Search, Send, ShieldCheck, Sparkles, Target, TrendingUp, Users, X, Zap
+  Activity, ArrowDownRight, ArrowRight, ArrowUpRight, BookOpen, BrainCircuit,
+  CalendarDays, Check, CheckCircle2, ChevronDown, ChevronRight, CircleHelp,
+  Clock3, GraduationCap, House, Lightbulb, MessageCircle, NotebookPen,
+  PanelLeftClose, Send, ShieldCheck, Sparkles, Target, Users, X, Zap
 } from 'lucide-react';
 
-type Role = 'student' | 'teacher' | 'parent' | 'management';
 type Track = 'LGS' | 'YKS';
-type ChatMessage = { role: 'assistant' | 'user'; text: string };
-
-const questionBank = {
-  LGS: [
-    {
-      title: 'Üslü ifadeler',
-      prompt: 'İki deney tüpündeki bakteri sayıları başlangıçta sırasıyla 2⁹ ve 8⁴. Bir saat sonra birinci tüp 4 katına, ikinci tüp 8 katına çıkıyor. Birinci tüpteki sayının ikinci tüpteki sayıya oranı kaçtır?',
-      options: ['1 / 32  (2⁻⁵)', '1 / 16  (2⁻⁴)', '1 / 8  (2⁻³)', '1 / 4  (2⁻²)'],
-      answer: 1,
-      explanation: 'Birinci tüp: 2⁹ × 4 = 2⁹ × 2² = 2¹¹. İkinci tüp: 8⁴ × 8 = (2³)⁴ × 2³ = 2¹² × 2³ = 2¹⁵. Oran 2¹¹ / 2¹⁵ = 2⁻⁴ = 1/16 olur.',
-      source: 'MEB ÖDSGM · 2018–2019 resmî örnek sorudan uyarlanmıştır',
-      misconceptions: [
-        'Üsleri çıkarırken 2⁹ ve 8⁴ ifadelerini önce aynı tabana çevirelim. 8⁴ = (2³)⁴ = 2¹² olur; sonra ikinci tüpün 8 katına çıkmasını da hesaba katmalıyız.',
-        '',
-        'İkinci tüpün son hâli 8⁴ × 8 = 2¹⁵ olur. Birinci tüp 2¹¹ olduğundan oran 2¹¹ / 2¹⁵ = 2⁻⁴ olur.',
-        'İki tüpün de bir saat sonraki sayısını hesaplayıp birinciyi ikinciye bölmeliyiz. Birinci tüp 2¹¹, ikinci tüp 2¹⁵ olur; oran 1/16’dır.'
-      ]
-    },
-    {
-      title: 'Üslü ifadeler · tekrar',
-      prompt: '3² + 2 işleminin sonucu kaçtır?',
-      options: ['8', '9', '11', '18'],
-      answer: 2,
-      explanation: 'Önce üslü işlem yapılır: 3² = 3 × 3 = 9. Ardından 2 eklenir ve sonuç 11 olur.',
-      source: 'Demo için hazırlanmış tekrar sorusu · Resmî sınav sorusu değildir',
-      misconceptions: [
-        '3², 3 × 2 değil 3 × 3 demektir. Önce üslü işlemi hesaplayalım.',
-        '9, yalnızca 3² işleminin sonucu. Soruda buna 2 daha ekleniyor.',
-        '',
-        '18, 9 ile 2’yi çarpmış olabileceğini düşündürüyor. İfadede 9 ile 2 toplanıyor.'
-      ]
-    }
-  ],
-  YKS: [
-    {
-      title: 'Fonksiyonlar',
-      prompt: 'f(x) = 2x + 1 olduğuna göre f(3) kaçtır?',
-      options: ['5', '6', '7', '8'],
-      answer: 2,
-      explanation: 'f(3) değerini bulmak için x yerine 3 yazarız: f(3) = 2 × 3 + 1 = 7.',
-      source: 'Demo için hazırlanmış örnek soru · Resmî sınav sorusu değildir',
-      misconceptions: [
-        '5 sonucunu bulduysan verilen ifadeyi ve işlem adımlarını tekrar kontrol edelim.',
-        '6, 2 × 3 işlemini yapıp sondaki +1 adımını atlamış olabileceğini düşündürebilir.',
-        '',
-        '8 sonucunu bulduysan x yerine 3 yazma ve çarpma adımını yeniden inceleyelim.'
-      ]
-    },
-    {
-      title: 'Fonksiyonlar · tekrar',
-      prompt: 'g(x) = x² − 1 ise g(2) kaçtır?',
-      options: ['2', '3', '4', '5'],
-      answer: 1,
-      explanation: 'x yerine 2 yazılır: g(2) = 2² − 1 = 4 − 1 = 3.',
-      source: 'Demo için hazırlanmış tekrar sorusu · Resmî sınav sorusu değildir',
-      misconceptions: [
-        '2 sonucuna ulaştıysan çıkarma işlemini veya üs alma adımını yeniden kontrol edelim.',
-        '',
-        '4, yalnızca 2² işleminin sonucu. İfadede 1 çıkarma adımı da var.',
-        '5 sonucunu bulduysan çıkarma yerine toplama yapmış olabilirsin.'
-      ]
-    }
-  ]
+type Role = 'student' | 'teacher' | 'parent' | 'center';
+type View = 'today' | 'practice' | 'coach' | 'progress';
+type ChatItem = { role: 'user' | 'assistant'; text: string };
+type Option = { id: string; text: string };
+type Question = {
+  id: string; track: Track; topic: string; prompt: string; options: Option[];
+  source: string; sourceUrl?: string; verified: boolean; hints?: string[];
+};
+const students: Record<Track, { id: string; name: string; grade: string; goal: string; initials: string }> = {
+  LGS: { id: 'std_lgs_801', name: 'Kerem Demir', grade: '8. sınıf', goal: 'LGS · Matematik', initials: 'KD' },
+  YKS: { id: 'std_yks_1101', name: 'Selin Yılmaz', grade: '11. sınıf', goal: 'YKS · Matematik', initials: 'SY' }
+};
+const roles: { id: Role; label: string }[] = [
+  { id: 'student', label: 'Öğrenci' }, { id: 'teacher', label: 'Öğretmen' },
+  { id: 'parent', label: 'Veli' }, { id: 'center', label: 'Kurum' }
+];
+const demoRetry: Question = {
+  id: 'demo-retry-uslu-01', track: 'LGS', topic: 'Üslü ifadeler · pekiştirme',
+  prompt: 'Bir sayının 2⁵ katı 2⁹ ise bu sayı kaçtır?',
+  options: [{id:'A',text:'2³'}, {id:'B',text:'2⁴'}, {id:'C',text:'2⁵'}, {id:'D',text:'2¹⁴'}],
+  source: 'Kübik demo için hazırlanmış pekiştirme sorusu · resmî sınav sorusu değildir',
+  verified: false
+};
+const demoYks: Question = {
+  id: 'demo-yks-function-01', track: 'YKS', topic: 'Fonksiyonlar',
+  prompt: 'f(x) = 3x − 2 olduğuna göre f(4) kaçtır?',
+  options: [{id:'A',text:'8'}, {id:'B',text:'10'}, {id:'C',text:'12'}, {id:'D',text:'14'}],
+  source: 'Kübik demo için hazırlanmış örnek · resmî YKS sorusu değildir',
+  verified: false
+};
+const localAnswer: Record<string, { key: string; explanation: string; misconception: Record<string,string> }> = {
+  'demo-retry-uslu-01': {
+    key:'B', explanation:'2⁵ ile çarpıldığında 2⁹ elde ediliyorsa, aynı tabanlı üsleri bölme işleminde çıkarırız: 2⁹ ÷ 2⁵ = 2⁴.',
+    misconception:{A:'Üsleri çıkarırken 9 − 5 işlemini yeniden kontrol et. Sonuç 4 olmalı.',C:'2⁵ sayının kendisi değil, onu çarptığımız katsayı. Bilinmeyeni bulmak için bölmeliyiz.',D:'Çarpma kuralını kullanmış olabilirsin; bilinmeyeni yalnız bırakmak için bölme yap.'}
+  },
+  'demo-yks-function-01': {
+    key:'B', explanation:'f(4) demek, x yerine 4 yazmak demektir: 3 × 4 − 2 = 12 − 2 = 10.',
+    misconception:{A:'3 × 4 = 12 adımından sonra 2 çıkarma adımını da yapmalısın.',C:'12 yalnızca 3 × 4 işleminin sonucu. Sonra 2 çıkarılır.',D:'İşlemde +2 yok; verilen ifade 3x − 2.'}
+  }
 };
 
-const roleNames: Record<Role, string> = {
-  student: 'Öğrenci alanı',
-  teacher: 'Öğretmen çalışma alanı',
-  parent: 'Veli görünümü',
-  management: 'Kurum görünümü'
-};
-
-export default function App() {
-  const [role, setRole] = useState<Role>('student');
+function App() {
   const [track, setTrack] = useState<Track>('LGS');
-  const [page, setPage] = useState<'overview' | 'practice' | 'tutor' | 'progress'>('overview');
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [submitted, setSubmitted] = useState(false);
-  const [retryDone, setRetryDone] = useState(false);
+  const [role, setRole] = useState<Role>('student');
+  const [view, setView] = useState<View>('today');
+  const [officialQuestion, setOfficialQuestion] = useState<Question | null>(null);
+  const [questionLoading, setQuestionLoading] = useState(true);
+  const [question, setQuestion] = useState<Question | null>(null);
   const [retryMode, setRetryMode] = useState(false);
+  const [selected, setSelected] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState(false);
+  const [answerResult, setAnswerResult] = useState<{correct:boolean; explanation:string; misconception?:string; repeated?:boolean} | null>(null);
+  const [progress, setProgress] = useState<number | null>(null);
+  const [chat, setChat] = useState<ChatItem[]>([{role:'assistant',text:'Merhaba! Nerede takıldığını birlikte bulalım. İstersen sorudaki bir adımı yazabilir ya da aşağıdaki kısa sorulardan biriyle başlayabilirsin.'}]);
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
-  const [chat, setChat] = useState<ChatMessage[]>([
-    { role: 'assistant', text: 'Merhaba! Bugün birlikte üslü ifadeleri çalışabiliriz. Takıldığın yeri anlatırsan adım adım ilerleyelim.' }
-  ]);
-  const [progressOverride, setProgressOverride] = useState<number | null>(null);
+  const [chatError, setChatError] = useState('');
   const [notice, setNotice] = useState('');
-  const [showRoleMenu, setShowRoleMenu] = useState(false);
+  const [health, setHealth] = useState<{hasGeminiKey:boolean} | null>(null);
+  const chatEnd = useRef<HTMLDivElement>(null);
+  const student = students[track];
 
-  const question = questionBank[track][retryMode ? 1 : 0];
-  const equation = track === 'LGS' ? (retryMode ? '3² + 2' : '2¹¹ ÷ 2¹⁵') : (retryMode ? 'g(2) = 2² − 1' : 'f(3) = 2 × 3 + 1');
+  useEffect(() => {
+    fetch('/api/health').then(r=>r.json()).then(setHealth).catch(()=>setHealth(null));
+  }, []);
 
-  const student = track === 'LGS'
-    ? { name: 'Kerem Demir', grade: '8. sınıf', exam: 'LGS hazırlık', initials: 'KD', goal: 'Üslü ifadeleri pekiştirmek' }
-    : { name: 'Selin Yılmaz', grade: '11. sınıf', exam: 'YKS hazırlık', initials: 'SY', goal: 'Fonksiyonlarda temel kavramlar' };
-
-  const otherStudent = track === 'LGS'
-    ? { name: 'Selin Yılmaz', grade: '11. sınıf', track: 'YKS' }
-    : { name: 'Kerem Demir', grade: '8. sınıf', track: 'LGS' };
-
-  const progress = useMemo(() => {
-    // Keep every role in sync with the server-side demo learning record.
-    return progressOverride ?? (track === 'LGS' ? 52 : 55);
-  }, [track, progressOverride]);
-
-  const loadProgress = async (nextTrack: Track) => {
-    const studentId = nextTrack === 'LGS' ? 'std_lgs_801' : 'std_yks_1101';
-    const topicId = nextTrack === 'LGS' ? 'top_lgs_uslu' : 'top_yks_fonk';
-    try {
-      const response = await fetch(`/api/student/progress?studentId=${studentId}&topicId=${topicId}`);
-      const data = await response.json();
-      if (response.ok && typeof data.progress?.currentMastery === 'number') {
-        setProgressOverride(data.progress.currentMastery);
-      } else {
-        setProgressOverride(null);
+  useEffect(() => {
+    let alive = true;
+    setQuestionLoading(true);
+    setQuestion(null);
+    setSelected(null); setSubmitted(false); setAnswerResult(null); setRetryMode(false);
+    setChat([{role:'assistant',text:track === 'LGS'
+      ? 'Bu soruyu hemen çözmek zorunda değilsin. Önce hangi kuralın gerektiğini bulalım; sonra birlikte adım adım ilerleriz.'
+      : 'Fonksiyon sorularında ilk küçük adım, x yerine verilen sayıyı yazmaktır. İstersen bunu bir örnek üzerinde deneyelim.'}]);
+    const load = async () => {
+      try {
+        const response = await fetch('/api/content/verified-question?studentId=' + student.id);
+        const data = await response.json();
+        if (!alive) return;
+        if (track === 'LGS' && data.available && data.question) {
+          const q = data.question;
+          const mapped: Question = {
+            id:q.id, track:'LGS', topic:q.topic, prompt:q.questionText,
+            options:q.options.map((o:Option)=>({id:o.id,text:o.text})),
+            source:q.sourceDocument, sourceUrl:q.sourceUrl,
+            verified:q.verificationStatus === 'verified_official_publication',
+            hints:q.pedagogicalHints
+          };
+          setOfficialQuestion(mapped); setQuestion(mapped);
+        } else {
+          setOfficialQuestion(null);
+          setQuestion(track === 'LGS' ? demoRetry : demoYks);
+        }
+      } catch {
+        if (!alive) return;
+        setQuestion(track === 'LGS' ? demoRetry : demoYks);
+        setNotice('Sunucuya ulaşılamadı. Şu an yalnızca yerel demo örneği gösteriliyor.');
+      } finally {
+        if (alive) { setQuestionLoading(false); loadProgress(); }
       }
-    } catch {
-      setProgressOverride(null);
-    }
-  };
+    };
+    const loadProgress = async () => {
+      try {
+        const r = await fetch('/api/student/progress?studentId=' + student.id);
+        const d = await r.json();
+        if (alive && r.ok && typeof d.progress?.currentMastery === 'number') setProgress(d.progress.currentMastery);
+        else if (alive) setProgress(null);
+      } catch { if (alive) setProgress(null); }
+    };
+    void load();
+    return () => { alive = false; };
+  }, [track, student.id]);
 
-  const resetPractice = () => {
-    setSelectedAnswer(null);
-    setSubmitted(false);
-    setRetryDone(false);
-    setRetryMode(false);
-    setPage('practice');
-  };
+  useEffect(() => { chatEnd.current?.scrollIntoView({behavior:'smooth',block:'end'}); }, [chat,chatLoading]);
 
-  const switchRole = (next: Role) => {
-    setRole(next);
-    setNotice('');
-    setShowRoleMenu(false);
-    if (next === 'student') setPage('overview');
-  };
+  const mastery = progress ?? (track === 'LGS' ? 52 : 38);
+  const nav: {id:View; label:string; hint:string; icon:typeof House}[] = [
+    {id:'today',label:'Bugünüm',hint:'Günlük rota',icon:House},
+    {id:'practice',label:'Soru atölyesi',hint:'Çöz ve öğren',icon:NotebookPen},
+    {id:'coach',label:'AI çalışma arkadaşı',hint:'Takıldığın yerde',icon:MessageCircle},
+    {id:'progress',label:'Gelişimim',hint:'Neler değişiyor?',icon:Activity}
+  ];
+  const changeTrack = (next:Track) => { setTrack(next); setRole('student'); setView('today'); setNotice(''); };
+  const chooseView = (next:View) => { setView(next); setNotice(''); };
 
   const submitAnswer = async () => {
-    if (selectedAnswer === null) return;
+    if (!question || !selected || submitted) return;
     setSubmitted(true);
-    if (retryMode && selectedAnswer === question.answer) setRetryDone(true);
-
-    // Save the first LGS attempt to the local demo learning record.
-    // The retry question and YKS illustration remain clearly labeled demo content.
-    if (track === 'LGS' && !retryMode) {
+    const local = localAnswer[question.id];
+    let correct = false;
+    let explanation = '';
+    let misconception = '';
+    let repeated = false;
+    if (question.verified && track === 'LGS') {
       try {
-        const response = await fetch('/api/student/answer', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            studentId: 'std_lgs_801',
-            topicId: 'top_lgs_uslu',
-            questionId: 'meb-lgs-8-mat-uslu-01',
-            chosenOptionId: String.fromCharCode(65 + selectedAnswer),
-            hintsUsedCount: 0,
-            aiTutorInteractionsCount: chat.length - 1
+        const r = await fetch('/api/student/answer', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({
+            studentId:student.id, topicId:'top_lgs_uslu', questionId:question.id,
+            chosenOptionId:selected, hintsUsedCount:0, aiTutorInteractionsCount:chat.filter(x=>x.role==='user').length
           })
         });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Yanıt kaydedilemedi.');
-        if (typeof data.updatedMastery?.currentMastery === 'number') setProgressOverride(data.updatedMastery.currentMastery);
-        setNotice(data.isCorrect
-          ? (data.isRepeatedAttempt ? 'Bu resmî örnek soru bu demo kaydında daha önce doğru çözülmüş. İlerleme tekrar sayılarak artırılmadı.' : 'Yanıt demo öğrenme kaydına işlendi.')
-          : 'Yanıt demo öğrenme kaydına işlendi; yanlış yanıt öğretmen görünümünde takip edilebilir.');
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error || 'Yanıt kaydedilemedi.');
+        correct = Boolean(d.isCorrect); repeated = Boolean(d.isRepeatedAttempt);
+        explanation = d.officialSolution?.summary || d.explanation || 'Yanıt değerlendirildi.';
+        misconception = correct ? '' : (question.hints?.[0] || 'Önce ifadeleri aynı tabana çevirip üs kurallarını adım adım uygulayalım.');
+        if (typeof d.updatedMastery?.currentMastery === 'number') setProgress(d.updatedMastery.currentMastery);
       } catch {
-        setNotice('Yanıt ekranda değerlendirildi ancak yerel öğrenme kaydına ulaşılamadı.');
+        const optionIndex = question.options.findIndex(o=>o.id===selected);
+        correct = selected === 'B';
+        explanation = correct
+          ? 'Doğru cevap. Resmî değerlendirme servisine ulaşılamadığı için bu sonuç yalnızca ekranda değerlendirildi.'
+          : 'Bu yerel önizlemede seçimin doğru görünmüyor. Sunucu değerlendirmesi olmadan ilerleme kaydı oluşturulmadı.';
+        misconception = optionIndex >= 0 ? 'Önce iki ifadeyi aynı tabana çevir ve soruda hangi büyüklüğün oranlandığını kontrol et.' : '';
       }
+    } else if (local) {
+      correct = selected === local.key;
+      explanation = local.explanation;
+      misconception = correct ? '' : (local.misconception[selected] || 'İşlem adımlarını birer birer kontrol edelim.');
+    } else {
+      explanation = 'Bu örnek için cevap anahtarı doğrulanmadı. Öğretmenle birlikte kontrol etmek üzere işaretlendi.';
     }
+    setAnswerResult({correct, explanation, misconception, repeated});
+    if (!correct) setNotice('Hata bir sonuç değil, nereden devam edeceğimizi gösteren ipucu.');
   };
 
-  const sendTutorMessage = async () => {
-    const text = chatInput.trim();
+  const startRetry = () => {
+    setQuestion(track === 'LGS' ? demoRetry : demoYks);
+    setRetryMode(true); setSelected(null); setSubmitted(false); setAnswerResult(null);
+    setView('practice'); setRole('student');
+    setNotice('Pekiştirme sorusu açıldı. Bu soru demo için hazırlandı; resmî sınav sorusu değildir.');
+  };
+
+  const sendChat = async (message?:string) => {
+    const text = (message ?? chatInput).trim();
     if (!text || chatLoading) return;
-    setChat((items) => [...items, { role: 'user', text }]);
     setChatInput('');
-    setChatLoading(true);
+    setChatError('');
+    const next = [...chat,{role:'user' as const,text}];
+    setChat(next); setChatLoading(true);
     try {
       const response = await fetch('/api/tutor/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          studentId: track === 'LGS' ? 'std_lgs_801' : 'std_yks_1101',
-          userMessage: text,
-          chatHistory: chat.map((item) => ({ role: item.role, content: item.text }))
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          studentId:student.id,
+          userMessage:text,
+          chatHistory:next.slice(-8).map(m=>({role:m.role,content:m.text}))
         })
       });
       const data = await response.json();
-      if (!response.ok || !data.reply) throw new Error(data.error || 'AI servisine ulaşılamadı.');
-      setChat((items) => [...items, { role: 'assistant', text: data.reply }]);
-    } catch {
-      setChat((items) => [...items, {
-        role: 'assistant',
-        text: track === 'LGS' ? 'Şu anda canlı AI yanıtı alınamadı. Güvenilir ilerlemek için birlikte sorunun temel fikrinden başlayalım: üslü ifadelerde üs, aynı çarpanın kaç kez kullanıldığını gösterir. İstersen sorudaki adımı birlikte inceleyebiliriz.' : 'Şu anda canlı AI yanıtı alınamadı. YKS parkurunda doğrulanmış resmî soru içeriği henüz bağlı değil; ancak fonksiyon kavramlarını açıklama amaçlı örneklerle çalışabiliriz.'
-      }]);
-      setNotice('Canlı AI şu anda erişilebilir değil; kontrollü örnek yanıt gösterildi.');
-    } finally {
-      setChatLoading(false);
-    }
+      if (!response.ok) throw new Error(data.error || 'AI yanıtı alınamadı.');
+      setChat(old=>[...old,{role:'assistant',text:data.reply}]);
+    } catch (err) {
+      const messageText = err instanceof Error ? err.message : 'Bağlantı kurulamadı.';
+      setChatError(messageText);
+      const safeFallback = track === 'LGS'
+        ? 'Şu anda canlı AI yanıtı alamadım. Yine de şu ilk adımı birlikte yapabiliriz: 8⁴ ifadesini 2 tabanında yaz. Çünkü 8 = 2³. Sonra üslerin üssü kuralını uygula. Bu, otomatik AI yanıtı değil; demo içindeki sabit ipucudur.'
+        : 'Canlı AI yanıtı alınamadı. Fonksiyonlarda x yerine verilen sayıyı koyup işlem sırasıyla ilerleriz. Bu parkurda resmî soru içeriği henüz doğrulanmadı; bu yüzden örneği resmî soru diye sunmayacağım.';
+      setChat(old=>[...old,{role:'assistant',text:safeFallback}]);
+    } finally { setChatLoading(false); }
   };
 
-  const Header = () => (
-    <header className="topbar">
-      <button className="brand" onClick={() => { setRole('student'); setPage('overview'); }} aria-label="Ana sayfaya dön">
-        <span className="brand-mark"><span /><span /><span /><span /></span>
-        <span className="brand-copy"><strong>öğren<span>+</span></strong><small>KUBİK İÇİN ÜRÜN DENEYİ</small></span>
-      </button>
-      <div className="topbar-center"><span className="demo-dot" /> ÜRÜN DEMOSU <span className="topbar-divider">/</span> {roleNames[role]}</div>
-      <div className="topbar-actions">
-        <button className="icon-button" aria-label="Yardım" onClick={() => setNotice('Bu deneyim, Kubik için hazırlanan bağımsız ürün demosudur.')}><CircleHelp size={18} /></button>
-        <div className="role-menu-wrap">
-          <button className="profile-switch" onClick={() => setShowRoleMenu(!showRoleMenu)}>
-            <span className="avatar">{role === 'student' ? student.initials : role === 'teacher' ? 'EA' : role === 'parent' ? 'AY' : 'K'}</span>
-            <span className="profile-switch-text"><strong>{role === 'student' ? student.name : role === 'teacher' ? 'Ece Öğretmen' : role === 'parent' ? 'Ayşe Yılmaz' : 'Kurum yönetimi'}</strong><small>Demo görünümü</small></span>
-            <ChevronDown size={15} />
-          </button>
-          {showRoleMenu && <div className="role-dropdown">{(['student', 'teacher', 'parent', 'management'] as Role[]).map((r) => <button key={r} onClick={() => switchRole(r)}>{roleNames[r]}{role === r && <Check size={15} />}</button>)}</div>}
+  const resetPractice = () => {
+    if (track === 'LGS' && officialQuestion) { setQuestion(officialQuestion); setRetryMode(false); }
+    else { setQuestion(track === 'LGS' ? demoRetry : demoYks); setRetryMode(true); }
+    setSelected(null); setSubmitted(false); setAnswerResult(null); setNotice('');
+  };
+
+  const renderStudent = () => {
+    if (view === 'coach') return <Coach />;
+    if (view === 'progress') return <ProgressView />;
+    if (view === 'practice') return <PracticeView />;
+    return <TodayView />;
+  };
+
+  function TodayView() {
+    return <div className="page-stack">
+      <section className="welcome-band">
+        <div className="welcome-copy">
+          <div className="eyebrow"><span className="live-dot" /> BUGÜNÜN ÖĞRENME ROTASI</div>
+          <h1>Selam {student.name.split(' ')[0]},<br/><span>küçük adımlar büyütür.</span></h1>
+          <p>Bugün her şeyi bitirmek zorunda değilsin. Bir konuyu gerçekten anlamak yeterli.</p>
+          <button className="button button-light" onClick={()=>chooseView('practice')}>İlk çalışmaya başla <ArrowRight size={16}/></button>
         </div>
-      </div>
-    </header>
-  );
-
-  const Sidebar = () => (
-    <aside className="sidebar">
-      <div className="workspace-label">ÇALIŞMA ALANI</div>
-      {role === 'student' ? <>
-        <button className={page === 'overview' ? 'nav-item active' : 'nav-item'} onClick={() => setPage('overview')}><LayoutDashboard size={18} /> Genel bakış</button>
-        <button className={page === 'practice' ? 'nav-item active' : 'nav-item'} onClick={() => setPage('practice')}><ClipboardCheck size={18} /> Soru çöz</button>
-        <button className={page === 'tutor' ? 'nav-item active' : 'nav-item'} onClick={() => setPage('tutor')}><MessageCircle size={18} /> AI öğretmen <span className="nav-new">AI</span></button>
-        <button className={page === 'progress' ? 'nav-item active' : 'nav-item'} onClick={() => setPage('progress')}><TrendingUp size={18} /> Gelişimim</button>
-      </> : role === 'teacher' ? <>
-        <button className="nav-item active" onClick={() => setNotice('Öğrenci gelişimi görünümü açık.')}><LayoutDashboard size={18} /> Sınıf özeti</button>
-      </> : role === 'parent' ? <>
-        <button className="nav-item active" onClick={() => setNotice('Haftalık gelişim özeti açık.')}><LayoutDashboard size={18} /> Haftalık özet</button>
-      </> : <>
-        <button className="nav-item active" onClick={() => setNotice('Kurum görünümü açık.')}><LayoutDashboard size={18} /> Genel görünüm</button>
-      </>}
-      <div className="sidebar-bottom">
-        <div className="sidebar-help"><div className="help-icon"><Sparkles size={17} /></div><strong>Her adım bir gelişim.</strong><p>Hedefini küçük adımlara böl, ilerlemeni takip et.</p><button onClick={() => { setRole('student'); setPage('practice'); }}>Çalışmaya başla <ArrowRight size={14} /></button></div>
-        <div className="demo-label"><ShieldCheck size={14} /> Örnek öğrenci verileri</div>
-      </div>
-    </aside>
-  );
-
-  const StudentOverview = () => (
-    <>
-      <div className="welcome-row"><div><div className="eyebrow">11 EKİM PAZAR · BUGÜNÜN PLANI</div><h1>Merhaba, {student.name.split(' ')[0]} <span className="wave">✳</span></h1><p className="muted">Küçük bir adım, büyük bir ilerlemenin başlangıcı.</p></div><div className="track-toggle"><button className={track === 'LGS' ? 'selected' : ''} onClick={() => { setTrack('LGS'); void loadProgress('LGS'); setRetryMode(false); setRetryDone(false); setSelectedAnswer(null); setSubmitted(false); setChat([{ role: 'assistant', text: 'Merhaba! Bugün birlikte üslü ifadeleri çalışabiliriz. Takıldığın yeri anlatırsan adım adım ilerleyelim.' }]); setNotice('LGS demo öğrencisine geçildi.'); }}>LGS</button><button className={track === 'YKS' ? 'selected' : ''} onClick={() => { setTrack('YKS'); void loadProgress('YKS'); setRetryMode(false); setRetryDone(false); setSelectedAnswer(null); setSubmitted(false); setChat([{ role: 'assistant', text: 'Merhaba! Bugün birlikte fonksiyonları çalışabiliriz. Bir fonksiyonun değerini bulmak için verilen x değerini ifadede yerine koyarak başlayabiliriz.' }]); setNotice('YKS demo öğrencisine geçildi.'); }}>YKS</button></div></div>
-      <section className="hero-card">
-        <div className="hero-copy"><span className="pill pill-light"><Sparkles size={13} /> BUGÜNÜN ODAĞI</span><h2>{student.goal}</h2><p>Önce neyi bildiğini görelim. Sonra sana en çok yardımcı olacak adıma birlikte karar verelim.</p><button className="button button-white" onClick={resetPractice}>Çalışmaya devam et <ArrowRight size={16} /></button><div className="hero-meta"><span><Clock3 size={14} /> 12 dk</span><span><Target size={14} /> 3 küçük adım</span></div></div>
-        <div className="hero-art"><div className="orbit orbit-one" /><div className="orbit orbit-two" /><div className="art-center"><BrainCircuit size={42} strokeWidth={1.5} /></div><div className="float-card float-top"><span className="float-icon"><CheckCircle2 size={16} /></span><span><strong>Öğrenme planı</strong><small>Sana göre şekillenir</small></span></div><div className="float-card float-bottom"><span className="mini-bars"><i /><i /><i /><i /><i /></span><span><strong>İlerleme</strong><small>{progress}% konu hâkimiyeti</small></span></div></div>
+        <div className="route-art" aria-hidden="true">
+          <div className="orbit orbit-one"></div><div className="orbit orbit-two"></div>
+          <div className="orbit-core"><BrainCircuit size={38}/></div>
+          <div className="orbit-tag tag-one"><Target size={15}/> 1 konu</div>
+          <div className="orbit-tag tag-two"><CheckCircle2 size={15}/> 1 adım</div>
+        </div>
       </section>
-      <div className="section-heading"><div><h2>Bugünkü çalışma planın</h2><p>İhtiyacına göre sıralanmış üç küçük adım.</p></div><button className="text-button" onClick={() => setPage('progress')}>Gelişimimi gör <ArrowRight size={15} /></button></div>
-      <div className="plan-list">
-        <button className="plan-row" onClick={resetPractice}><span className="plan-number active-number">01</span><span className="plan-main"><strong>Kısa bir soruyla başla</strong><small>{question.title} · 3 dakika</small></span><span className="plan-status status-next">Şimdi başla</span><ChevronRight size={17} /></button>
-        <button className="plan-row" onClick={() => setPage('tutor')}><span className="plan-number">02</span><span className="plan-main"><strong>Anlamadığın adımı sor</strong><small>AI öğretmenle birlikte incele · 4 dakika</small></span><span className="plan-status">Önerilen</span><ChevronRight size={17} /></button>
-        <button className="plan-row" onClick={() => setPage('progress')}><span className="plan-number">03</span><span className="plan-main"><strong>Gelişimini kontrol et</strong><small>Konularını ve sonraki hedefini gör · 2 dakika</small></span><span className="plan-status">Son adım</span><ChevronRight size={17} /></button>
+      <div className="section-heading"><div><span className="eyebrow muted">BUGÜN SANA ÖZEL</span><h2>Çalışma planın</h2></div><span className="quiet-pill"><CalendarDays size={14}/> Bugün · 20 dk</span></div>
+      <section className="plan-grid">
+        <button className="plan-card plan-main" onClick={()=>chooseView('practice')}>
+          <div className="plan-icon indigo"><NotebookPen size={20}/></div><div className="plan-meta"><span>01 · MATEMATİK</span><span className="duration"><Clock3 size={13}/> 10 dk</span></div>
+          <h3>{track==='LGS'?'Üslü ifadeler':'Fonksiyonlar'}</h3><p>{track==='LGS'?'Üs kurallarını bir problemde kullan.':'Fonksiyon değerini adım adım hesapla.'}</p>
+          <div className="plan-bottom"><span>Çalışmaya geç</span><ArrowRight size={16}/></div>
+        </button>
+        <button className="plan-card" onClick={()=>chooseView('coach')}>
+          <div className="plan-icon mint"><MessageCircle size={20}/></div><div className="plan-meta"><span>02 · ANLAMA</span><span className="duration"><Clock3 size={13}/> 5 dk</span></div>
+          <h3>Takıldığın yeri sor</h3><p>Bir adımı anlamadıysan AI çalışma arkadaşıyla birlikte aç.</p>
+          <div className="plan-bottom"><span>Soru sor</span><ArrowRight size={16}/></div>
+        </button>
+        <button className="plan-card" onClick={()=>chooseView('progress')}>
+          <div className="plan-icon amber"><Activity size={20}/></div><div className="plan-meta"><span>03 · GERİ BAKIŞ</span><span className="duration"><Clock3 size={13}/> 5 dk</span></div>
+          <h3>Ne öğrendin?</h3><p>Yanıtlarını ve sıradaki küçük adımını gözden geçir.</p>
+          <div className="plan-bottom"><span>Gelişimi gör</span><ArrowRight size={16}/></div>
+        </button>
+      </section>
+      <div className="lower-grid">
+        <section className="surface focus-panel"><div className="surface-heading"><div><span className="eyebrow muted">BU HAFTAKİ ODAĞIN</span><h3>{track==='LGS'?'Üslü ifadeler':'Fonksiyonlar'}</h3></div><span className="round-icon"><Target size={18}/></span></div>
+          <p className="body-copy">Amaç sadece doğru cevabı bulmak değil; hangi kuralı neden kullandığını anlatabilmek.</p>
+          <div className="mastery-line"><div><span>Örnek ilerleme göstergesi</span><strong>{mastery}%</strong></div><div className="progress-track"><span style={{width:mastery+'%'}}/></div><small>{progress===null?'Bu gösterge başlangıç demo değeridir; gerçek öğrenci başarısı değildir.':'Bu demo oturumunda sunucuya kaydedilen konu ilerlemesi.'}</small></div>
+        </section>
+        <section className="surface note-panel"><div className="note-icon"><Lightbulb size={20}/></div><span className="eyebrow muted">KÜÇÜK HATIRLATMA</span><h3>Hata yapmak, öğrenmenin bir parçası.</h3><p>Yanlış cevapta sadece sonucu değil, düşünme adımını da inceliyoruz.</p><button className="text-button" onClick={()=>chooseView('practice')}>Bir soruda dene <ArrowRight size={15}/></button></section>
       </div>
-      <div className="bottom-grid"><section className="panel mastery-panel"><div className="panel-head"><div><h3>Konu durumun</h3><p>Örnek öğrenme göstergeleri</p></div><button className="quiet-icon" onClick={() => setPage('progress')}><ArrowUpRight size={17} /></button></div><div className="mastery-item"><div className="mastery-top"><span>{track === 'LGS' ? 'Üslü ifadeler' : 'Fonksiyonlar'}</span><strong>{progress}%</strong></div><div className="progress-track"><span style={{ width: progress + '%' }} /></div><small>Bir sonraki adım: benzer bir soruyla tekrar</small></div><div className="mastery-item"><div className="mastery-top"><span>{track === 'LGS' ? 'Çarpanlar ve katlar' : 'Polinomlara giriş'}</span><strong>72%</strong></div><div className="progress-track"><span style={{ width: '72%' }} /></div><small>Örnek kayıt · Henüz canlı ölçüm değil</small></div></section><section className="panel tutor-promo"><div className="promo-symbol"><MessageCircle size={22} /></div><span className="eyebrow">YANINDA BİR REHBER</span><h3>Takıldığın yerde yalnız değilsin.</h3><p>Bir soruyu neden yanlış yaptığını anlamak için AI öğretmenle konuş.</p><button className="button button-dark" onClick={() => setPage('tutor')}>Bir soru sor <ArrowRight size={15} /></button></section></div>
-    </>
-  );
+    </div>;
+  }
 
-  const Practice = () => (
-    <div className="practice-wrap">
-      <button className="back-link" onClick={() => setPage('overview')}><ArrowRight className="back-arrow" size={15} /> Genel bakışa dön</button>
-      <div className="practice-title"><div><div className="eyebrow">KISA KONU KONTROLÜ · {track}</div><h1>Birlikte düşünelim.</h1><p className="muted">Bu sorunun amacı sadece doğru cevabı bulmak değil, düşünme adımını anlamak.</p></div><div className="question-counter"><span>{retryMode ? '02' : '01'}</span><small>/ 03</small></div></div>
-      <div className="question-layout"><section className="panel question-panel"><div className="question-meta"><span className="subject-tag"><BookOpen size={14} /> Matematik</span><span className="difficulty">Temel seviye</span></div><h2>{question.title}</h2><p className="question-prompt">{question.prompt}</p><div className="math-example">{equation} <span>= ?</span></div><div className="options-list">{question.options.map((option, index) => <button key={option} disabled={submitted} className={'option-row ' + (selectedAnswer === index ? 'chosen ' : '') + (submitted && index === question.answer ? 'correct ' : '') + (submitted && selectedAnswer === index && index !== question.answer ? 'incorrect ' : '')} onClick={() => setSelectedAnswer(index)}><span className="option-letter">{String.fromCharCode(65 + index)}</span><span>{option}</span>{submitted && index === question.answer && <CheckCircle2 size={18} />}{submitted && selectedAnswer === index && index !== question.answer && <X size={18} />}</button>)}</div>
-      {!submitted ? <button className="button button-dark button-full" disabled={selectedAnswer === null} onClick={submitAnswer}>Cevabımı kontrol et <ArrowRight size={16} /></button> : <div className={'answer-feedback ' + (selectedAnswer === question.answer ? 'feedback-correct' : 'feedback-wrong')}><div className="feedback-title">{selectedAnswer === question.answer ? <CheckCircle2 size={19} /> : <Lightbulb size={19} />}{selectedAnswer === question.answer ? 'Doğru cevap!' : 'Buradan birlikte öğrenebiliriz.'}</div><p>{selectedAnswer !== null && selectedAnswer !== question.answer && question.misconceptions[selectedAnswer] ? question.misconceptions[selectedAnswer] : question.explanation}</p><div className="source-note"><ShieldCheck size={14} /> {question.source}{track === 'LGS' && !retryMode && <> · <a href="https://odsgm.meb.gov.tr/www/ornek-sorular/kategori/22" target="_blank" rel="noreferrer">Resmî kaynak</a></>}</div><button className="button button-dark button-full" onClick={() => { if (!retryMode) { setRetryMode(true); setSelectedAnswer(null); setSubmitted(false); setPage('practice'); } else { setPage('tutor'); } }}>{retryMode ? 'AI öğretmenle devam et' : 'Benzer soruyla tekrar dene'} <ArrowRight size={16} /></button><button className="text-button" onClick={() => setPage('tutor')}>AI öğretmene sor <ArrowRight size={14} /></button></div>}
-      </section><aside className="panel question-side"><div className="side-icon"><Target size={20} /></div><h3>Bu çalışmada neyi keşfediyoruz?</h3><p>{track === 'LGS' ? 'Bir işlemi ezberlemek yerine, üslü ifadenin ne anlattığını kavramayı.' : 'Fonksiyonda verilen x değerini yerine koyup sonucu bulmayı.'}</p><div className="side-divider" /><div className="side-mini-row"><span className="side-mini-icon"><Clock3 size={16} /></span><span><strong>3–5 dakika</strong><small>Kısa konu kontrolü</small></span></div><div className="side-mini-row"><span className="side-mini-icon"><BrainCircuit size={16} /></span><span><strong>Sonraki adım kişiselleşir</strong><small>Cevabına göre yönlendirme</small></span></div></aside></div>
+  function PracticeView() {
+    return <div className="page-stack">
+      <div className="page-intro"><div><span className="eyebrow muted">ÖĞRENME ATÖLYESİ / MATEMATİK</span><h1>Çöz. Anla. Bir daha dene.</h1><p>Yanıtından sonra sadece doğru/yanlış değil, düşünme adımına dair geri bildirim alırsın.</p></div><span className="quiet-pill"><ShieldCheck size={14}/>{question?.verified?'Kaynağı doğrulanmış':'Demo örneği'}</span></div>
+      {questionLoading || !question ? <div className="surface loading-surface"><div className="spinner"/><p>Soru hazırlanıyor…</p></div> :
+      <div className="practice-layout">
+        <section className="surface question-panel">
+          <div className="question-top"><div className="topic-chip"><BookOpen size={14}/>{question.topic}</div><span className="question-count">{retryMode?'PEKİŞTİRME':'SORU 01'} / MATEMATİK</span></div>
+          <h2>{question.prompt}</h2>
+          <div className="option-list">{question.options.map((option,index)=><button key={option.id} disabled={submitted} className={'answer-option '+(selected===option.id?'selected ':'')+(submitted && answerResult && option.id=== (question.verified?'B':localAnswer[question.id]?.key)?'answer-correct ':'')+(submitted && selected===option.id && answerResult && !answerResult.correct?'answer-wrong':'')} onClick={()=>setSelected(option.id)}><span className="option-letter">{String.fromCharCode(65+index)}</span><span>{option.text.replace(/^[A-D]\)\s*/,'')}</span>{selected===option.id&&<span className="option-check"><Check size={15}/></span>}</button>)}</div>
+          {!submitted ? <div className="question-actions"><span className="helper-text"><CircleHelp size={14}/> Takılırsan AI çalışma arkadaşına sorabilirsin.</span><button className="button button-primary" disabled={!selected} onClick={submitAnswer}>Yanıtımı kontrol et <ArrowRight size={16}/></button></div> :
+          <div className={'feedback-panel '+(answerResult?.correct?'feedback-good':'feedback-try')}><div className="feedback-title">{answerResult?.correct?<CheckCircle2 size={19}/>:<Lightbulb size={19}/>}<div><strong>{answerResult?.correct?'Evet, doğru düşünüyorsun.':'Burada bir düşünme adımını yeniden inceleyelim.'}</strong><span>{answerResult?.correct?'Kuralı doğru uyguladın.':'Yanlış cevap bir ipucu; birlikte nerede ayrıldığını bulalım.'}</span></div></div>
+            <p>{answerResult?.correct?answerResult.explanation:(answerResult?.misconception||answerResult?.explanation)}</p>
+            {answerResult?.repeated&&<small>Bu soru daha önce kaydedilmiş. Tekrar çözüm yeni ilerleme olarak sayılmadı.</small>}
+            <div className="feedback-actions"><button className="button button-primary" onClick={()=>{setView('coach');setChatInput('Bu soruda '+(answerResult?.correct?'hangi kuralı kullandığımı':'hangi adımda hata yapmış olabileceğimi')+' adım adım anlatır mısın?')}}><MessageCircle size={15}/> Birlikte incele</button><button className="button button-secondary" onClick={startRetry}>Benzer soru çöz <ArrowRight size={15}/></button></div>
+          </div>}
+          <div className="source-strip"><ShieldCheck size={15}/><div><strong>{question.verified?'Resmî kaynak bilgisi':'Örnek içerik'}</strong><span>{question.source}</span></div>{question.sourceUrl&&<a href={question.sourceUrl} target="_blank" rel="noreferrer">Kaynağı aç <ArrowUpRight size={13}/></a>}</div>
+        </section>
+        <aside className="practice-aside">
+          <section className="surface aside-card"><div className="aside-heading"><span className="plan-icon mint"><BrainCircuit size={18}/></span><span className="eyebrow muted">ÖĞRENME YÖNTEMİ</span></div><h3>Sonucu değil, düşünme yolunu bul.</h3><ol className="step-list"><li className={submitted?'complete':''}><span>1</span><div><strong>Önce kendin dene</strong><small>İlk düşünceni seç.</small></div></li><li className={answerResult?'complete':''}><span>2</span><div><strong>Geri bildirimi incele</strong><small>Hangi adımın önemli olduğunu gör.</small></div></li><li><span>3</span><div><strong>Benzer soruda uygula</strong><small>Öğrenmeyi tekrar dene.</small></div></li></ol></section>
+          <section className="surface aside-card ai-nudge"><span className="eyebrow muted">YARDIMA MI İHTİYACIN VAR?</span><p>“Neden bu işlemi yaptık?” diye sorabilirsin.</p><button className="text-button" onClick={()=>chooseView('coach')}>AI çalışma arkadaşına git <ArrowRight size={15}/></button></section>
+        </aside>
+      </div>}
+    </div>;
+  }
+
+  function Coach() {
+    return <div className="page-stack">
+      <div className="page-intro"><div><span className="eyebrow muted">ÖĞRENME DESTEĞİ</span><h1>AI çalışma arkadaşın.</h1><p>Sana cevabı hemen vermek yerine düşünme adımlarını açmana yardım eder.</p></div><span className={'connection-pill '+(health?.hasGeminiKey?'connected':'not-connected')}><span/>{health?.hasGeminiKey?'Gemini bağlantısı hazır':health===null?'Bağlantı durumu bilinmiyor':'API anahtarı algılanmadı'}</span></div>
+      <div className="coach-layout">
+        <section className="surface chat-panel">
+          <div className="chat-head"><div className="coach-avatar"><Sparkles size={20}/></div><div><strong>Kübik Öğrenme Rehberi</strong><span><span className="live-dot"/> Matematik · {student.grade}</span></div><span className="chat-safe"><ShieldCheck size={14}/> Öğrenme odaklı</span></div>
+          <div className="chat-messages">{chat.map((item,i)=><div key={i} className={'message-row '+(item.role==='user'?'message-user':'')}><div className="message-avatar">{item.role==='user'?student.initials:<Sparkles size={15}/>}</div><div className="message-bubble"><span className="message-author">{item.role==='user'?'Sen':'Öğrenme rehberi'}</span><p>{item.text}</p></div></div>)}{chatLoading&&<div className="message-row"><div className="message-avatar"><Sparkles size={15}/></div><div className="message-bubble typing"><span/><span/><span/></div></div>}<div ref={chatEnd}/></div>
+          {chatError&&<div className="chat-error"><CircleHelp size={14}/>{chatError} <span>Gösterilen sabit ipucu canlı AI yanıtı değildir.</span></div>}
+          <div className="suggestion-row"><button onClick={()=>void sendChat(track==='LGS'?'Üslerin üssü kuralını basit bir örnekle açıklar mısın?':'Fonksiyonlarda x yerine değer yazmak ne demek?')}>{track==='LGS'?'Üslerin üssü kuralı':'Fonksiyon nedir?'}</button><button onClick={()=>void sendChat('Bana cevabı söylemeden bir ipucu verir misin?')}>Bir ipucu ver</button><button onClick={()=>void sendChat('Küçük bir örnek üzerinden anlatır mısın?')}>Örnekle anlat</button></div>
+          <form className="chat-composer" onSubmit={e=>{e.preventDefault();void sendChat();}}><input value={chatInput} onChange={e=>setChatInput(e.target.value)} placeholder="Takıldığın adımı buraya yaz…" aria-label="AI çalışma arkadaşına mesaj" disabled={chatLoading}/><button className="send-button" type="submit" disabled={!chatInput.trim()||chatLoading} aria-label="Mesajı gönder"><Send size={17}/></button></form>
+          <p className="chat-disclaimer">AI yanıtları hata içerebilir. Önemli akademik kararlar için öğretmeninle kontrol et.</p>
+        </section>
+        <aside className="surface coach-context"><span className="eyebrow muted">ÇALIŞMA BAĞLAMI</span><h3>Bugünkü konun</h3><div className="context-topic"><div className="plan-icon indigo"><BookOpen size={18}/></div><div><strong>{track==='LGS'?'Üslü ifadeler':'Fonksiyonlar'}</strong><span>Matematik · {student.grade}</span></div></div><div className="context-divider"/><span className="eyebrow muted">İSTERSEN ŞUNU SOR</span><button className="prompt-card" onClick={()=>setChatInput('Bu konuyu 3 kısa adımda anlatır mısın?')}>Bu konuyu 3 kısa adımda anlat <ArrowRight size={15}/></button><button className="prompt-card" onClick={()=>setChatInput('Yanlış cevabım hangi düşünce hatasından kaynaklanmış olabilir?')}>Yanlışım ne anlatıyor olabilir? <ArrowRight size={15}/></button><div className="teacher-note"><Lightbulb size={16}/><p>Bir soruda uzun süre takılırsan, öğretmeninden destek istemek de iyi bir öğrenme adımıdır.</p></div></aside>
+      </div>
+    </div>;
+  }
+
+  function ProgressView() {
+    return <div className="page-stack"><div className="page-intro"><div><span className="eyebrow muted">KENDİ GELİŞİMİNİ İZLE</span><h1>Her doğru adım bir iz bırakır.</h1><p>Bu görünüm, demo oturumunda kaydedilen yanıtları ve sıradaki çalışma önerisini bir araya getirir.</p></div></div>
+      <div className="progress-overview"><section className="surface mastery-card"><span className="eyebrow muted">KONU İLERLEMESİ</span><div className="mastery-number">{mastery}<small>%</small></div><div className="progress-track"><span style={{width:mastery+'%'}}/></div><p>{progress===null?'Başlangıç göstergesi · gerçek öğrenci verisi değildir.':'Sunucu tarafında kayıtlı demo konu ilerlemesi.'}</p></section><section className="surface next-step-card"><div className="plan-icon amber"><Target size={19}/></div><span className="eyebrow muted">ÖNERİLEN SONRAKİ ADIM</span><h3>{answerResult&&!answerResult.correct?'Bu adımı yeniden çalış':'Benzer bir soruda kuralı uygula'}</h3><p>{answerResult&&!answerResult.correct?'Yanlış seçeneğin hangi düşünceyi işaret ettiğini AI çalışma arkadaşıyla incele.':'Aynı kazanımı farklı bir örnekte kullanarak gerçekten anladığını kontrol et.'}</p><button className="button button-primary" onClick={startRetry}>Bir soru daha çöz <ArrowRight size={15}/></button></section></div>
+      <section className="surface reflection-card"><div className="surface-heading"><div><span className="eyebrow muted">KISA ÖZ DEĞERLENDİRME</span><h3>Bugün kendine sor</h3></div><span className="round-icon"><Lightbulb size={18}/></span></div><div className="reflection-list"><div><span>01</span><p>Hangi kuralı kullandım, neden?</p><button onClick={()=>{setView('coach');setChatInput('Bugünkü soruda hangi kuralı neden kullandığımı anlamama yardım et.')}}>Birlikte düşün <ArrowRight size={14}/></button></div><div><span>02</span><p>Benzer bir soruda tek başıma deneyebilir miyim?</p><button onClick={startRetry}>Kendimi dene <ArrowRight size={14}/></button></div><div><span>03</span><p>Hangi adım için öğretmen desteğine ihtiyacım var?</p><button onClick={()=>setNotice('Öğretmen görünümünde bu konu için destek notu gösteriliyor.')}>Not al <ArrowRight size={14}/></button></div></div></section>
+    </div>;
+  }
+
+  const renderTeacher = () => <div className="page-stack">
+    <div className="page-intro"><div><span className="eyebrow muted">ÖĞRETMEN ÇALIŞMA ALANI</span><h1>Öğrencinin takıldığı yeri görün.</h1><p>Öğrenme verisini bir sonraki öğretmen müdahalesine dönüştüren sade görünüm.</p></div><span className="quiet-pill"><Users size={14}/> Demo öğrenci: {student.name}</span></div>
+    <section className="teacher-student-banner"><div className="student-avatar large">{student.initials}</div><div className="teacher-student-copy"><span className="eyebrow">ÖĞRENCİ KARTI · DEMO</span><h2>{student.name}</h2><p>{student.grade} · {student.goal}</p></div><button className="button button-light" onClick={()=>{setRole('student');setView('practice')}}>Öğrenci akışını aç <ArrowRight size={15}/></button></section>
+    <div className="teacher-grid"><section className="surface teacher-data"><div className="surface-heading"><div><span className="eyebrow muted">KONU DURUMU</span><h3>{track==='LGS'?'Üslü ifadeler':'Fonksiyonlar'}</h3></div><span className="topic-chip"><Activity size={14}/> {progress===null?'Demo': 'Kayıtlı'}</span></div><div className="teacher-mastery"><strong>{mastery}%</strong><div><div className="progress-track"><span style={{width:mastery+'%'}}/></div><small>{progress===null?'Başlangıç örneği; henüz kayıtlı sonuç yok.':'Öğrenci oturumunda kaydedilen konu göstergesi.'}</small></div></div><div className="signal-row"><div className="signal-icon amber"><Lightbulb size={17}/></div><div><strong>Öğretmen için olası müdahale</strong><p>{answerResult&&!answerResult.correct?'Üs kurallarında aynı tabana çevirme adımını kısa bir örnekle tekrar edin.':'Öğrenciden kullandığı kuralı kendi cümleleriyle açıklamasını isteyin.'}</p></div></div></section>
+    <section className="surface teacher-data"><div className="surface-heading"><div><span className="eyebrow muted">OTURUM ÖZETİ</span><h3>Bu çalışmada</h3></div><span className="round-icon"><NotebookPen size={17}/></span></div><div className="session-stat"><span>Yanıt durumu</span><strong>{submitted?(answerResult?.correct?'Doğru':'Tekrar gerekli'):'Henüz yanıtlanmadı'}</strong></div><div className="session-stat"><span>AI destek etkileşimi</span><strong>{chat.filter(x=>x.role==='user').length} mesaj</strong></div><div className="session-stat"><span>İçerik kaynağı</span><strong>{question?.verified?'MEB · doğrulanmış':'Demo örneği'}</strong></div><button className="button button-secondary full-button" onClick={()=>{setRole('student');setView('coach')}}>Öğrenciyle aynı konuyu incele <ArrowRight size={15}/></button></section></div>
+    <section className="surface teacher-next"><div className="plan-icon mint"><MessageCircle size={18}/></div><div><span className="eyebrow muted">ÖNERİLEN ÖĞRETMEN NOTU</span><h3>“Sonucu nasıl bulduğunu anlatır mısın?”</h3><p>Öğrencinin yalnızca doğru cevabı değil, kullandığı düşünme yolunu da açıklamasını isteyin.</p></div><button className="text-button" onClick={()=>setNotice('Öğretmen notu bu demo oturumu için seçildi.')}>Notu seç <Check size={15}/></button></section>
+  </div>;
+
+  const renderParent = () => <div className="page-stack"><div className="page-intro"><div><span className="eyebrow muted">VELİ GÖRÜNÜMÜ</span><h1>Gelişimi anlaşılır şekilde takip edin.</h1><p>Notlardan çok, çalışma rutini ve bir sonraki destek adımına odaklanın.</p></div></div>
+    <section className="parent-summary surface"><div className="student-avatar large">{student.initials}</div><div className="parent-child"><span className="eyebrow muted">ÖĞRENCİ</span><h2>{student.name}</h2><p>{student.grade} · {student.goal}</p></div><div className="parent-progress"><span>Konu ilerleme göstergesi</span><strong>{mastery}%</strong><div className="progress-track"><span style={{width:mastery+'%'}}/></div></div></section>
+    <div className="parent-grid"><section className="surface"><span className="eyebrow muted">BU OTURUMDA</span><h3>{submitted?'Bir soru üzerinde çalıştı':'Çalışma sırasındaki adım'}</h3><p>{submitted?'Yanıt sonrası açıklama ve tekrar önerisi sunuldu.':'Bir soruyu kendi başına denemesi ve ardından açıklamayı incelemesi planlandı.'}</p><div className="parent-step"><CheckCircle2 size={17}/><span>Önce kendi başına deneme</span></div><div className="parent-step"><CheckCircle2 size={17}/><span>Yanlışın nedenini anlama</span></div><div className="parent-step"><Clock3 size={17}/><span>Benzer soruyla pekiştirme</span></div></section><section className="surface parent-advice"><div className="plan-icon amber"><Lightbulb size={18}/></div><span className="eyebrow muted">EVDE DESTEK İÇİN</span><h3>“Bugün neyi farklı anladın?”</h3><p>Doğru sayısını sormak yerine, öğrendiği kuralı kendi cümleleriyle anlatmasını isteyin.</p><button className="button button-secondary" onClick={()=>{setRole('student');setView('progress')}}>Gelişim görünümünü aç <ArrowRight size={15}/></button></section></div>
+  </div>;
+
+  const renderCenter = () => <div className="page-stack"><div className="page-intro"><div><span className="eyebrow muted">KÜBİK · KURUM GÖRÜNÜMÜ</span><h1>Eğitim sürecini görünür kılın.</h1><p>Bu demo, bireysel öğrenme döngüsünün kurum içindeki karşılığını gösterir. Gerçek kurum verisi içermez.</p></div></div>
+    <div className="center-metrics"><section className="surface"><span className="metric-label">AKTİF DEMO ÖĞRENCİ</span><strong>01</strong><small>Sunum senaryosu · gerçek kayıt sayısı değil</small></section><section className="surface"><span className="metric-label">ÖĞRENME DÖNGÜSÜ</span><strong>{submitted?'3 / 3':'1 / 3'}</strong><small>{submitted?'Yanıt ve geri bildirim gösterildi.':'Yanıt bekleniyor; akış canlı denenebilir.'}</small></section><section className="surface"><span className="metric-label">AI BAĞLANTISI</span><strong>{health?.hasGeminiKey?'Hazır':'Kontrol gerekli'}</strong><small>API anahtarı sunucu tarafından kontrol edilir.</small></section></div>
+    <section className="surface center-flow"><div className="surface-heading"><div><span className="eyebrow muted">ÜRÜNÜN TEMEL DÖNGÜSÜ</span><h3>Tek akış, dört rol</h3></div><span className="round-icon"><Activity size={18}/></span></div><div className="flow-steps"><div><span>01</span><BookOpen size={20}/><strong>Öğrenci çalışır</strong><p>Soru ve yanıt</p></div><ArrowRight/><div><span>02</span><BrainCircuit size={20}/><strong>Geri bildirim</strong><p>Hata nedeni ve ipucu</p></div><ArrowRight/><div><span>03</span><Users size={20}/><strong>Öğretmen görür</strong><p>Müdahale önerisi</p></div><ArrowRight/><div><span>04</span><Activity size={20}/><strong>İlerleme izlenir</strong><p>Ortak kayıt</p></div></div></section>
+    <section className="surface center-next"><div><span className="eyebrow muted">ÜRÜN KEŞFİ İÇİN SONRAKİ ADIM</span><h3>Önce Kubik’in gerçek sürecini tanımlayalım.</h3><p>Öğrenci grupları, öğretmen iş akışı, mevcut dijital araçlar ve veli iletişimi sahipleriyle birlikte doğrulanmalı. Bu demo üretim sistemi veya gelir tahmini değildir.</p></div><button className="button button-primary" onClick={()=>setNotice('Keşif gündemi: öğrenci akışı, öğretmen müdahalesi, veli iletişimi ve ölçülebilir kazanımlar.')}>Keşif gündemini göster <ArrowRight size={15}/></button></section>
+  </div>;
+
+  return <div className="product-shell">
+    <header className="topbar"><button className="brand" onClick={()=>{setRole('student');setView('today')}} aria-label="Kübik ana sayfa"><span className="brand-symbol"><span/><span/><span/><span/></span><span className="brand-word">kübik<span>+</span><small>ÖĞRENME ATÖLYESİ</small></span></button>
+      <div className="topbar-center"><span className="demo-status"/><span>ÜRÜN DENEYİMİ</span><span className="topbar-separator">/</span><span>{role==='student'?'ÖĞRENCİ ROTASI':role==='teacher'?'ÖĞRETMEN MASASI':role==='parent'?'VELİ ÖZETİ':'KURUM PERSPEKTİFİ'}</span></div>
+      <div className="topbar-actions"><div className="track-switch"><button className={track==='LGS'?'active':''} onClick={()=>changeTrack('LGS')}>LGS</button><button className={track==='YKS'?'active':''} onClick={()=>changeTrack('YKS')}>YKS</button></div><div className="user-chip"><span className="student-avatar">{student.initials}</span><span><strong>{student.name}</strong><small>{student.grade}</small></span><ChevronDown size={14}/></div></div>
+    </header>
+    <div className="app-frame"><aside className="sidebar"><div className="sidebar-label">ÇALIŞMA ALANI</div><div className="nav-list">{nav.map(item=>{const Icon=item.icon;return <button key={item.id} className={'nav-item '+(role==='student'&&view===item.id?'active':'')} onClick={()=>{setRole('student');chooseView(item.id)}}><span className="nav-icon"><Icon size={18}/></span><span className="nav-text"><strong>{item.label}</strong><small>{item.hint}</small></span>{role==='student'&&view===item.id&&<span className="nav-active-dot"/>}</button>})}</div><div className="sidebar-divider"/><div className="sidebar-label">AYNI ÖĞRENME, FARKLI BAKIŞ</div><div className="role-list">{roles.filter(r=>r.id!=='student').map(r=><button key={r.id} className={'role-item '+(role===r.id?'active':'')} onClick={()=>setRole(r.id)}><span className="role-avatar">{r.id==='teacher'?<GraduationCap size={17}/>:r.id==='parent'?<Users size={17}/>:<Activity size={17}/>}</span><span>{r.label}</span><ChevronRight size={15}/></button>)}</div><div className="sidebar-bottom"><div className="privacy-mark"><ShieldCheck size={16}/><span><strong>Güvenilir öğrenme</strong><small>Demo · gerçek öğrenci hesabı değil</small></span></div><button className="help-link" onClick={()=>setNotice('Bu demo, Kubik ile birlikte doğrulanacak bir ürün fikridir; üretim sistemi değildir.')}>Bu demo hakkında <CircleHelp size={14}/></button></div></aside>
+      <main className="main-area"><div className="mobile-track-note"><span className="live-dot"/> {student.goal} <span>· Demo profili</span></div>{notice&&<div className="notice-bar"><Lightbulb size={16}/><span>{notice}</span><button onClick={()=>setNotice('')} aria-label="Bildirimi kapat"><X size={15}/></button></div>}
+        {role==='student'?renderStudent():role==='teacher'?renderTeacher():role==='parent'?renderParent():renderCenter()}
+        <footer className="app-footer"><span>kübik+ <i>·</i> Öğrenme atölyesi</span><span><ShieldCheck size={13}/> Demo içerikleri açıkça etiketlenmiştir</span></footer>
+      </main>
     </div>
-  );
-
-  const Tutor = () => (
-    <div className="tutor-page"><button className="back-link" onClick={() => setPage('overview')}><ArrowRight className="back-arrow" size={15} /> Genel bakışa dön</button><div className="tutor-intro"><div className="tutor-big-icon"><Sparkles size={25} /></div><div><div className="eyebrow">AI DESTEKLİ ÇALIŞMA</div><h1>Birlikte anlayalım.</h1><p className="muted">Sana doğrudan cevabı vermek yerine, düşünmene yardımcı olacağım.</p></div></div><div className="chat-panel"><div className="chat-header"><div className="chat-avatar"><BrainCircuit size={19} /></div><div><strong>Öğrenme rehberin</strong><small><span className="online-dot" /> Konu odaklı destek</small></div><span className="chat-mode">DEMO</span></div><div className="chat-messages">{chat.map((message, index) => <div key={index} className={'chat-message ' + message.role}><div className="message-avatar">{message.role === 'assistant' ? <Sparkles size={14} /> : student.initials.slice(0, 1)}</div><div className="message-bubble">{message.text}</div></div>)}{chatLoading && <div className="chat-message assistant"><div className="message-avatar"><Sparkles size={14} /></div><div className="message-bubble typing"><i /><i /><i /></div></div>}</div><form className="chat-composer" onSubmit={(e) => { e.preventDefault(); void sendTutorMessage(); }}><input value={chatInput} onChange={(e) => setChatInput(e.target.value)} placeholder="Takıldığın yeri buraya yaz..." aria-label="AI öğretmene mesaj" /><button className="send-button" type="submit" disabled={!chatInput.trim() || chatLoading} aria-label="Mesaj gönder"><Send size={17} /></button></form><div className="chat-footnote"><ShieldCheck size={13} /> Eğitim amaçlı demo. Yanıtlar doğrulanmış ders materyalinin yerini tutmaz.</div></div><div className="suggested-prompts"><span>Şunları sorabilirsin:</span><button onClick={() => setChatInput(track === 'LGS' ? 'Üslü ifadede üs ne anlama gelir?' : 'Fonksiyon nedir?')}>{track === 'LGS' ? 'Üs ne anlama gelir?' : 'Fonksiyon nedir?'}</button><button onClick={() => setChatInput(track === 'LGS' ? 'Bu soruda neden 2¹¹ ÷ 2¹⁵ işlemini yapıyoruz?' : 'f(x) = 2x + 1 ise f(3) nasıl bulunur?')}>{track === 'LGS' ? 'Oranı nasıl buluruz?' : 'f(3) nasıl bulunur?'}</button></div></div>
-  );
-
-  const Progress = () => (
-    <div className="progress-page"><button className="back-link" onClick={() => setPage('overview')}><ArrowRight className="back-arrow" size={15} /> Genel bakışa dön</button><div className="welcome-row"><div><div className="eyebrow">GELİŞİM RAPORU</div><h1>İlerlemeni fark et.</h1><p className="muted">Örnek öğrenci verisi · Gerçek sınav sonucu değildir.</p></div><span className="report-period">Bu haftanın özeti</span></div><div className="stat-grid"><div className="stat-card"><span className="stat-icon blue"><Target size={18} /></span><small>Konu hâkimiyeti</small><strong>{progress}%</strong><span className="stat-caption">Örnek gösterge</span></div><div className="stat-card"><span className="stat-icon green"><CheckCircle2 size={18} /></span><small>Tamamlanan hedef</small><strong>{submitted ? '2 / 3' : '1 / 3'}</strong><span className="stat-caption">Bugünkü çalışma</span></div><div className="stat-card"><span className="stat-icon amber"><Clock3 size={18} /></span><small>Çalışma süresi</small><strong>{submitted ? '8' : '5'} dk</strong><span className="stat-caption">Bu demo oturumu</span></div></div><section className="panel report-panel"><div className="panel-head"><div><h3>Konu bazlı görünüm</h3><p>Bir sonraki çalışmayı seçmene yardımcı olur.</p></div><span className="sample-chip">ÖRNEK VERİ</span></div><div className="report-topic"><div><strong>{track === 'LGS' ? 'Üslü ifadeler' : 'Fonksiyonlar'}</strong><small>{submitted ? 'Soru denendi · Açıklama görüldü' : 'Kısa konu kontrolü bekliyor'}</small></div><div className="report-bar"><span style={{ width: progress + '%' }} /></div><strong>{progress}%</strong></div><div className="report-topic"><div><strong>{track === 'LGS' ? 'Çarpanlar ve katlar' : 'Polinomlara giriş'}</strong><small>Önceki örnek kayıt</small></div><div className="report-bar"><span style={{ width: '72%' }} /></div><strong>72%</strong></div><div className="next-step-box"><div className="next-step-icon"><Lightbulb size={20} /></div><div><strong>Önerilen sonraki adım</strong><p>{submitted && selectedAnswer !== question.answer ? (track === 'LGS' ? 'Üslü ifadelerin mantığını açıklamayla tekrar et ve benzer bir soruyu yeniden dene.' : 'Fonksiyon değerini bulma adımını tekrar et ve benzer bir soruyu yeniden dene.') : (track === 'LGS' ? 'Üslü ifadelerde temel kavramı pekiştirmek için bir benzer soru daha çöz.' : 'Fonksiyon değerini bulmak için bir benzer soru daha çöz.')}</p></div><button className="quiet-icon" onClick={resetPractice}><ArrowRight size={17} /></button></div></section></div>
-  );
-
-  const Teacher = () => (
-    <div className="role-page"><div className="welcome-row"><div><div className="eyebrow">ÖĞRETMEN ÇALIŞMA ALANI</div><h1>Öğrenciyi tanı, doğru adımı seç.</h1><p className="muted">Sınıfın durumundan bireysel desteğe geçiş.</p></div><span className="role-tag"><GraduationCap size={15} /> Örnek sınıf</span></div><div className="stat-grid"><div className="stat-card"><span className="stat-icon blue"><Users size={18} /></span><small>Örnek öğrenci</small><strong>2</strong><span className="stat-caption">LGS ve YKS örnek profili</span></div><div className="stat-card"><span className="stat-icon amber"><Target size={18} /></span><small>Öncelikli konu</small><strong>1</strong><span className="stat-caption">Aktif senaryo</span></div><div className="stat-card"><span className="stat-icon green"><ClipboardCheck size={18} /></span><small>Çalışma tamamlayan</small><strong>—</strong><span className="stat-caption">Gerçek sınıf verisi bağlı değil</span></div></div><section className="panel"><div className="panel-head"><div><h3>Takip önerileri</h3><p>Öğretmenin inceleyebileceği örnek durumlar.</p></div><span className="sample-chip">SİMÜLASYON</span></div><div className="student-table"><div className="student-table-head"><span>Öğrenci</span><span>Konu</span><span>Önerilen adım</span><span>Durum</span></div><div className="student-table-row"><span className="student-name"><span className="avatar small-avatar">{student.initials}</span><span><strong>{student.name}</strong><small>{student.grade} · {track}</small></span></span><span>{question.title}</span><span>{submitted ? (selectedAnswer === question.answer ? 'Sonuç doğru · pekiştir' : 'Yanlış yanıt · tekrar öner') : 'Kısa konu kontrolü başlat'}</span><span className={'status-badge ' + (submitted && selectedAnswer === question.answer ? 'follow' : 'needs')}>{submitted ? (selectedAnswer === question.answer ? 'Sonuç alındı' : 'İncele') : 'Bekliyor'}</span></div><div className="student-table-row"><span className="student-name"><span className="avatar small-avatar purple">{otherStudent.name.split(' ').map((part) => part[0]).join('')}</span><span><strong>{otherStudent.name}</strong><small>{otherStudent.grade} · {otherStudent.track}</small></span></span><span>{otherStudent.track === 'YKS' ? 'Fonksiyonlar' : 'Üslü ifadeler'}</span><span>Örnek takip kaydı</span><span className="status-badge follow">Demo</span></div></div><div className="teacher-insight"><Lightbulb size={19} /><div><strong>Öğretmen için içgörü</strong><p>Analiz, öğretmenin kararının yerine geçmez; hangi öğrenciyle ve hangi konudan başlamanın faydalı olabileceğini görünür kılar.</p></div></div></section></div>
-  );
-
-  const Parent = () => (
-    <div className="role-page"><div className="welcome-row"><div><div className="eyebrow">VELİ GÖRÜNÜMÜ</div><h1>Bu hafta neler öğrendi?</h1><p className="muted">Anlaşılır, sade ve hedeflere odaklanan bir özet.</p></div><span className="role-tag"><Users size={15} /> {student.name}</span></div><section className="parent-summary"><div className="parent-summary-top"><span className="stat-icon green"><CheckCircle2 size={20} /></span><div><span className="eyebrow">HAFTALIK ÖZET · ÖRNEK</span><h2>İlerlemek için net bir sonraki adım var.</h2></div></div><p>Bu örnek rapor, öğrencinin çalışma hedeflerini ve hangi konular üzerinde durduğunu anlaşılır biçimde gösterir. Gerçek öğrenci kaydı değildir.</p><div className="parent-metrics"><div><strong>{submitted ? '2' : '1'} / 3</strong><span>Tamamlanan hedef</span></div><div><strong>{progress}%</strong><span>Örnek konu göstergesi</span></div><div><strong>{submitted ? '8' : '5'} dk</strong><span>Demo oturumu</span></div></div></section><section className="panel parent-recommendation"><div className="next-step-icon"><Lightbulb size={20} /></div><div><h3>Önerilen destek</h3><p>Çalışılan konuyu kısa tekrar ve benzer sorularla pekiştirmek; ihtiyaç devam ederse öğretmenle birlikte değerlendirmek.</p></div><button className="text-button" onClick={() => switchRole('teacher')}>Öğretmen görünümü <ArrowRight size={15} /></button></section></div>
-  );
-
-  const Management = () => (
-    <div className="role-page"><div className="welcome-row"><div><div className="eyebrow">KURUMSAL ÜRÜN VİZYONU</div><h1>Eğitimi birbirine bağlayan sistem.</h1><p className="muted">Öğrenci deneyiminden öğretmen içgörüsüne, oradan veli iletişimine.</p></div><span className="role-tag"><ShieldCheck size={15} /> Ürün konsepti</span></div><section className="management-hero"><div><span className="pill pill-light"><Sparkles size={13} /> KUBİK İÇİN ÜRÜN FİKRİ</span><h2>Yalnızca ders sunmak değil, öğrenme sürecini görünür kılmak.</h2><p>Öğrencinin çalışma verisi, öğretmenin yönlendirmesi ve velinin anlayabildiği ilerleme aynı sistemin parçaları olabilir.</p></div><div className="management-graphic"><div className="mg-node"><GraduationCap size={19} /><span>Öğrenci</span></div><div className="mg-line" /><div className="mg-node center-node"><BrainCircuit size={22} /><span>Öğrenme döngüsü</span></div><div className="mg-line" /><div className="mg-node"><Users size={19} /><span>Öğretmen + veli</span></div></div></section><div className="section-heading"><div><h2>Değer nerede oluşabilir?</h2><p>Henüz doğrulanmamış ürün fırsatları.</p></div></div><div className="opportunity-grid"><div className="panel opportunity-card"><span className="stat-icon blue"><Target size={18} /></span><h3>Öğrenme görünürlüğü</h3><p>Öğrencinin hangi konuda desteğe ihtiyaç duyduğunu somutlaştırma.</p></div><div className="panel opportunity-card"><span className="stat-icon green"><Users size={18} /></span><h3>Öğretmen desteği</h3><p>Tekrarlayan analiz işlerini azaltmaya ve doğru müdahaleye odaklanma.</p></div><div className="panel opportunity-card"><span className="stat-icon amber"><TrendingUp size={18} /></span><h3>Dijital hizmet potansiyeli</h3><p>Yüz yüze eğitimi tamamlayabilecek çevrim içi çalışma deneyimleri.</p></div></div><div className="honesty-note"><ShieldCheck size={17} /><p><strong>Şeffaflık:</strong> Bu ekran ürün konseptini gösterir. Öğrenci sayısı, gelir, başarı artışı veya operasyonel tasarruf hakkında gerçek işletme verisi iddia etmez.</p></div></div>
-  );
-
-  return (
-    <div className="app-shell">
-      {Header()}
-      <div className="app-body">{Sidebar()}<main className="main-content">
-        {notice && <div className="notice-banner"><span>{notice}</span><button onClick={() => setNotice('')} aria-label="Bildirimi kapat"><X size={15} /></button></div>}
-        {role === 'student' && page === 'overview' && StudentOverview()}
-        {role === 'student' && page === 'practice' && Practice()}
-        {role === 'student' && page === 'tutor' && Tutor()}
-        {role === 'student' && page === 'progress' && Progress()}
-        {role === 'teacher' && Teacher()}
-        {role === 'parent' && Parent()}
-        {role === 'management' && Management()}
-        <footer className="app-footer"><span>öğren+ <i>·</i> Ürün deneyimi</span><span><ShieldCheck size={13} /> Örnek verilerle hazırlanmıştır</span></footer>
-      </main></div>
-    </div>
-  );
+  </div>;
 }
+
+export default App;
