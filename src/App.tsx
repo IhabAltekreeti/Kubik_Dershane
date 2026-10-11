@@ -154,7 +154,9 @@ function App() {
         if (!r.ok) throw new Error(d.error || 'Yanıt kaydedilemedi.');
         correct = Boolean(d.isCorrect); repeated = Boolean(d.isRepeatedAttempt);
         explanation = d.officialSolution?.summary || d.explanation || 'Yanıt değerlendirildi.';
-        misconception = correct ? '' : (question.hints?.[0] || 'Önce ifadeleri aynı tabana çevirip üs kurallarını adım adım uygulayalım.');
+        const selectedIndex = question.options.findIndex(o=>o.id===selected);
+        const hintIndex = selectedIndex === 0 ? 0 : Math.max(0, selectedIndex - 1);
+        misconception = correct ? '' : (question.hints?.[hintIndex] || 'Önce ifadeleri aynı tabana çevirip üs kurallarını adım adım uygulayalım.');
         if (typeof d.updatedMastery?.currentMastery === 'number') setProgress(d.updatedMastery.currentMastery);
       } catch {
         setAnswerResult({
@@ -277,7 +279,7 @@ function App() {
         <section className="surface question-panel">
           <div className="question-top"><div className="topic-chip"><BookOpen size={14}/>{question.topic}</div><span className="question-count">{retryMode?'PEKİŞTİRME':'SORU 01'} / MATEMATİK</span></div>
           <h2>{question.prompt}</h2>
-          <div className="option-list">{question.options.map((option,index)=><button key={option.id} disabled={submitted} className={'answer-option '+(selected===option.id?'selected ':'')+(submitted && answerResult && option.id=== (question.verified?'B':localAnswer[question.id]?.key)?'answer-correct ':'')+(submitted && selected===option.id && answerResult && !answerResult.correct?'answer-wrong':'')} onClick={()=>setSelected(option.id)}><span className="option-letter">{String.fromCharCode(65+index)}</span><span>{option.text.replace(/^[A-D]\)\s*/,'')}</span>{selected===option.id&&<span className="option-check"><Check size={15}/></span>}</button>)}</div>
+          <div className="option-list">{question.options.map((option,index)=><button key={option.id} disabled={submitted} className={'answer-option '+(selected===option.id?'selected ':'')+(submitted && answerResult && !answerResult.unverified && option.id=== (question.verified?'B':localAnswer[question.id]?.key)?'answer-correct ':'')+(submitted && selected===option.id && answerResult && !answerResult.correct && !answerResult.unverified?'answer-wrong':'')} onClick={()=>setSelected(option.id)}><span className="option-letter">{String.fromCharCode(65+index)}</span><span>{option.text.replace(/^[A-D]\)\s*/,'')}</span>{selected===option.id&&<span className="option-check"><Check size={15}/></span>}</button>)}</div>
           {!submitted ? <div className="question-actions"><span className="helper-text"><CircleHelp size={14}/> Takılırsan AI çalışma arkadaşına sorabilirsin.</span><button className="button button-primary" disabled={!selected} onClick={submitAnswer}>Yanıtımı kontrol et <ArrowRight size={16}/></button></div> :
           <div className={'feedback-panel '+(answerResult?.correct?'feedback-good':'feedback-try')}><div className="feedback-title">{answerResult?.correct?<CheckCircle2 size={19}/>:<Lightbulb size={19}/>}<div><strong>{answerResult?.unverified?'Yanıt henüz doğrulanamadı.':answerResult?.correct?'Evet, doğru düşünüyorsun.':'Burada bir düşünme adımını yeniden inceleyelim.'}</strong><span>{answerResult?.unverified?'Bağlantı geri geldiğinde yeniden deneyebilirsin.':answerResult?.correct?'Kuralı doğru uyguladın.':'Yanlış cevap bir ipucu; birlikte nerede ayrıldığını bulalım.'}</span></div></div>
             <p>{answerResult?.correct?answerResult.explanation:(answerResult?.misconception||answerResult?.explanation)}</p>
