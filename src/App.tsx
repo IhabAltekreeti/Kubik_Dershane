@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
-  Activity, ArrowDownRight, ArrowRight, ArrowUpRight, BookOpen, BrainCircuit,
+  Activity, ArrowRight, ArrowUpRight, BookOpen, BrainCircuit,
   CalendarDays, Check, CheckCircle2, ChevronDown, ChevronRight, CircleHelp,
   Clock3, GraduationCap, House, Lightbulb, MessageCircle, NotebookPen,
-  PanelLeftClose, Send, ShieldCheck, Sparkles, Target, Users, X, Zap
+  Send, ShieldCheck, Sparkles, Target, Users, X
 } from 'lucide-react';
 
 type Track = 'LGS' | 'YKS';
@@ -217,10 +217,10 @@ function App() {
   };
 
   const renderStudent = () => {
-    if (view === 'coach') return <Coach />;
-    if (view === 'progress') return <ProgressView />;
-    if (view === 'practice') return <PracticeView />;
-    return <TodayView />;
+    if (view === 'coach') return Coach();
+    if (view === 'progress') return ProgressView();
+    if (view === 'practice') return PracticeView();
+    return TodayView();
   };
 
   function TodayView() {
