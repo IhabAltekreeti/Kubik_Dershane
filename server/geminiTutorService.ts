@@ -140,7 +140,7 @@ PEDAGOJİK KURALLAR:
       };
     }
 
-    const systemInstruction = `Sen Kübik için hazırlanmış bir eğitim demosunda ${student.grade} . sınıf ${student.track} öğrencisine Matematik konusunda yardımcı olan bir öğrenme rehberisin.
+    const systemInstruction = `Sen Kübik için hazırlanmış bir eğitim demosunda ${student.grade}. sınıf ${student.track} öğrencisine Matematik konusunda yardımcı olan bir öğrenme rehberisin.
 Öğrenci adı: ${student.name}.
 Konu: ${student.currentTopic}.
 Bu parkur için doğrulanmış resmî soru içeriği henüz bağlı değil. Bu yüzden örnekleri resmî MEB/YKS sorusu olarak tanıtma, kaynak veya cevap anahtarı uydurma.
