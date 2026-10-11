@@ -182,19 +182,24 @@ app.post('/api/tutor/chat', async (req, res) => {
   }
 
   const question = getVerifiedQuestionForTrack(trustedStudent.track);
-  if (!question) {
-    return res.status(400).json({
-      error: `${trustedStudent.grade}. Sınıf ${trustedStudent.track} parkuru için henüz doğrulanmış soru kaydı bulunmamaktadır. LGS içeriği YKS öğrencisine sunulamaz.`,
-      isRecoverable: false
-    });
-  }
-
-  const response = await geminiTutorService.getTutorReply(
-    trustedStudent,
-    question,
-    chatHistory,
-    userMessage.trim()
-  );
+  const response = question
+    ? await geminiTutorService.getTutorReply(
+        trustedStudent,
+        question,
+        chatHistory,
+        userMessage.trim()
+      )
+    : trustedStudent.track === 'YKS'
+      ? await geminiTutorService.getGeneralTutorReply(
+          trustedStudent,
+          chatHistory,
+          userMessage.trim()
+        )
+      : {
+          message: '',
+          error: 'Bu öğrenci parkuru için doğrulanmış soru içeriği henüz bulunmuyor.',
+          isRecoverable: false
+        };
 
   if (response.error) {
     return res.status(503).json({
