@@ -18,7 +18,7 @@ const questionBank = {
       options: ['1 / 32  (2⁻⁵)', '1 / 16  (2⁻⁴)', '1 / 8  (2⁻³)', '1 / 4  (2⁻²)'],
       answer: 1,
       explanation: 'Birinci tüp: 2⁹ × 4 = 2⁹ × 2² = 2¹¹. İkinci tüp: 8⁴ × 8 = (2³)⁴ × 2³ = 2¹² × 2³ = 2¹⁵. Oran 2¹¹ / 2¹⁵ = 2⁻⁴ = 1/16 olur.',
-      source: 'MEB ÖDSGM · 2018–2019 8. sınıf matematik resmî örnek sorusu',
+      source: 'MEB ÖDSGM · 2018–2019 resmî örnek sorudan uyarlanmıştır',
       misconceptions: [
         'Üsleri çıkarırken 2⁹ ve 8⁴ ifadelerini önce aynı tabana çevirelim. 8⁴ = (2³)⁴ = 2¹² olur; sonra ikinci tüpün 8 katına çıkmasını da hesaba katmalıyız.',
         '',
@@ -127,10 +127,36 @@ export default function App() {
     if (next === 'student') setPage('overview');
   };
 
-  const submitAnswer = () => {
+  const submitAnswer = async () => {
     if (selectedAnswer === null) return;
     setSubmitted(true);
     if (retryMode && selectedAnswer === question.answer) setRetryDone(true);
+
+    // Save the first LGS attempt to the local demo learning record.
+    // The retry question and YKS illustration remain clearly labeled demo content.
+    if (track === 'LGS' && !retryMode) {
+      try {
+        const response = await fetch('/api/student/answer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            studentId: 'std_lgs_801',
+            topicId: 'top_lgs_uslu',
+            questionId: 'meb-lgs-8-mat-uslu-01',
+            chosenOptionId: String.fromCharCode(65 + selectedAnswer),
+            hintsUsedCount: 0,
+            aiTutorInteractionsCount: chat.length - 1
+          })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Yanıt kaydedilemedi.');
+        setNotice(data.isCorrect
+          ? (data.isRepeatedAttempt ? 'Bu resmî örnek soru bu demo kaydında daha önce doğru çözülmüş. İlerleme tekrar sayılarak artırılmadı.' : 'Yanıt demo öğrenme kaydına işlendi.')
+          : 'Yanıt demo öğrenme kaydına işlendi; yanlış yanıt öğretmen görünümünde takip edilebilir.');
+      } catch {
+        setNotice('Yanıt ekranda değerlendirildi ancak yerel öğrenme kaydına ulaşılamadı.');
+      }
+    }
   };
 
   const sendTutorMessage = async () => {
