@@ -76,12 +76,12 @@ export default function App() {
   const equation = track === 'LGS' ? (retryMode ? '3² + 2' : 'a × a × a × a') : (retryMode ? 'g(2) = 2² − 1' : 'f(3) = 2 × 3 + 1');
 
   const student = track === 'LGS'
-    ? { name: 'Kerem Yılmaz', grade: '8. sınıf', exam: 'LGS hazırlık', initials: 'KY', goal: 'Üslü ifadeleri pekiştirmek' }
-    : { name: 'Selin Demir', grade: '11. sınıf', exam: 'YKS hazırlık', initials: 'SD', goal: 'Fonksiyonlarda temel kavramlar' };
+    ? { name: 'Kerem Demir', grade: '8. sınıf', exam: 'LGS hazırlık', initials: 'KD', goal: 'Üslü ifadeleri pekiştirmek' }
+    : { name: 'Selin Yılmaz', grade: '11. sınıf', exam: 'YKS hazırlık', initials: 'SY', goal: 'Fonksiyonlarda temel kavramlar' };
 
   const otherStudent = track === 'LGS'
-    ? { name: 'Selin Demir', grade: '11. sınıf', track: 'YKS' }
-    : { name: 'Kerem Yılmaz', grade: '8. sınıf', track: 'LGS' };
+    ? { name: 'Selin Yılmaz', grade: '11. sınıf', track: 'YKS' }
+    : { name: 'Kerem Demir', grade: '8. sınıf', track: 'LGS' };
 
   const progress = useMemo(() => {
     const base = track === 'LGS' ? 68 : 54;
@@ -206,10 +206,10 @@ export default function App() {
   const Practice = () => (
     <div className="practice-wrap">
       <button className="back-link" onClick={() => setPage('overview')}><ArrowRight className="back-arrow" size={15} /> Genel bakışa dön</button>
-      <div className="practice-title"><div><div className="eyebrow">KISA KONU KONTROLÜ · {track}</div><h1>Birlikte düşünelim.</h1><p className="muted">Bu sorunun amacı sadece doğru cevabı bulmak değil, düşünme adımını anlamak.</p></div><div className="question-counter"><span>01</span><small>/ 03</small></div></div>
+      <div className="practice-title"><div><div className="eyebrow">KISA KONU KONTROLÜ · {track}</div><h1>Birlikte düşünelim.</h1><p className="muted">Bu sorunun amacı sadece doğru cevabı bulmak değil, düşünme adımını anlamak.</p></div><div className="question-counter"><span>{retryMode ? '02' : '01'}</span><small>/ 03</small></div></div>
       <div className="question-layout"><section className="panel question-panel"><div className="question-meta"><span className="subject-tag"><BookOpen size={14} /> Matematik</span><span className="difficulty">Temel seviye</span></div><h2>{question.title}</h2><p className="question-prompt">{question.prompt}</p><div className="math-example">{equation} <span>= ?</span></div><div className="options-list">{question.options.map((option, index) => <button key={option} disabled={submitted} className={'option-row ' + (selectedAnswer === index ? 'chosen ' : '') + (submitted && index === question.answer ? 'correct ' : '') + (submitted && selectedAnswer === index && index !== question.answer ? 'incorrect ' : '')} onClick={() => setSelectedAnswer(index)}><span className="option-letter">{String.fromCharCode(65 + index)}</span><span>{option}</span>{submitted && index === question.answer && <CheckCircle2 size={18} />}{submitted && selectedAnswer === index && index !== question.answer && <X size={18} />}</button>)}</div>
       {!submitted ? <button className="button button-dark button-full" disabled={selectedAnswer === null} onClick={submitAnswer}>Cevabımı kontrol et <ArrowRight size={16} /></button> : <div className={'answer-feedback ' + (selectedAnswer === question.answer ? 'feedback-correct' : 'feedback-wrong')}><div className="feedback-title">{selectedAnswer === question.answer ? <CheckCircle2 size={19} /> : <Lightbulb size={19} />}{selectedAnswer === question.answer ? 'Doğru cevap!' : 'Buradan birlikte öğrenebiliriz.'}</div><p>{question.explanation}</p><div className="source-note"><ShieldCheck size={14} /> {question.source}</div><button className="button button-dark button-full" onClick={() => { if (!retryMode) { setRetryMode(true); setSelectedAnswer(null); setSubmitted(false); setPage('practice'); } else { setPage('tutor'); } }}>{retryMode ? 'AI öğretmenle devam et' : 'Benzer soruyla tekrar dene'} <ArrowRight size={16} /></button><button className="text-button" onClick={() => setPage('tutor')}>AI öğretmene sor <ArrowRight size={14} /></button></div>}
-      </section><aside className="panel question-side"><div className="side-icon"><Target size={20} /></div><h3>Bu çalışmada neyi keşfediyoruz?</h3><p>Bir işlemi ezberlemek yerine, üslü ifadenin ne anlattığını kavramayı.</p><div className="side-divider" /><div className="side-mini-row"><span className="side-mini-icon"><Clock3 size={16} /></span><span><strong>3–5 dakika</strong><small>Kısa konu kontrolü</small></span></div><div className="side-mini-row"><span className="side-mini-icon"><BrainCircuit size={16} /></span><span><strong>Sonraki adım kişiselleşir</strong><small>Cevabına göre yönlendirme</small></span></div></aside></div>
+      </section><aside className="panel question-side"><div className="side-icon"><Target size={20} /></div><h3>Bu çalışmada neyi keşfediyoruz?</h3><p>{track === 'LGS' ? 'Bir işlemi ezberlemek yerine, üslü ifadenin ne anlattığını kavramayı.' : 'Fonksiyonda verilen x değerini yerine koyup sonucu bulmayı.'}</p><div className="side-divider" /><div className="side-mini-row"><span className="side-mini-icon"><Clock3 size={16} /></span><span><strong>3–5 dakika</strong><small>Kısa konu kontrolü</small></span></div><div className="side-mini-row"><span className="side-mini-icon"><BrainCircuit size={16} /></span><span><strong>Sonraki adım kişiselleşir</strong><small>Cevabına göre yönlendirme</small></span></div></aside></div>
     </div>
   );
 
