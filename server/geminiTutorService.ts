@@ -98,7 +98,7 @@ PEDAGOJİK KURALLAR:
         : `Öğrenci: ${userMessage}\nÖğretmen:`;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3.8-flash',
         contents: fullPrompt,
         config: {
           systemInstruction,
@@ -155,7 +155,7 @@ Türkçe, yaşa uygun ve anlaşılır anlat. Öğrenciye bir seferde tek bir kü
         ? `${conversationContext}\nÖğrenci: ${userMessage}\nRehber:`
         : `Öğrenci: ${userMessage}\nRehber:`;
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3.8-flash',
         contents: fullPrompt,
         config: { systemInstruction, temperature: 0.5 }
       });
