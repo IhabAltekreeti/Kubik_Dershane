@@ -259,16 +259,16 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      <Header />
-      <div className="app-body"><Sidebar /><main className="main-content">
+      {Header()}
+      <div className="app-body">{Sidebar()}<main className="main-content">
         {notice && <div className="notice-banner"><span>{notice}</span><button onClick={() => setNotice('')} aria-label="Bildirimi kapat"><X size={15} /></button></div>}
-        {role === 'student' && page === 'overview' && <StudentOverview />}
-        {role === 'student' && page === 'practice' && <Practice />}
-        {role === 'student' && page === 'tutor' && <Tutor />}
-        {role === 'student' && page === 'progress' && <Progress />}
-        {role === 'teacher' && <Teacher />}
-        {role === 'parent' && <Parent />}
-        {role === 'management' && <Management />}
+        {role === 'student' && page === 'overview' && {StudentOverview()}}
+        {role === 'student' && page === 'practice' && {Practice()}}
+        {role === 'student' && page === 'tutor' && {Tutor()}}
+        {role === 'student' && page === 'progress' && {Progress()}}
+        {role === 'teacher' && {Teacher()}}
+        {role === 'parent' && {Parent()}}
+        {role === 'management' && {Management()}}
         <footer className="app-footer"><span>öğren+ <i>·</i> Ürün deneyimi</span><span><ShieldCheck size={13} /> Örnek verilerle hazırlanmıştır</span></footer>
       </main></div>
     </div>
