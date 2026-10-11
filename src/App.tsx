@@ -220,14 +220,10 @@ export default function App() {
         <button className={page === 'progress' ? 'nav-item active' : 'nav-item'} onClick={() => setPage('progress')}><TrendingUp size={18} /> Gelişimim</button>
       </> : role === 'teacher' ? <>
         <button className="nav-item active" onClick={() => setNotice('Öğrenci gelişimi görünümü açık.')}><LayoutDashboard size={18} /> Sınıf özeti</button>
-        <button className="nav-item" onClick={() => setNotice('Bu demo için örnek konu analizi gösteriliyor.')}><Target size={18} /> Konu analizleri</button>
-        <button className="nav-item" onClick={() => setNotice('Ödev atama iş akışı sonraki sürümde detaylandırılacak.')}><BookOpen size={18} /> Çalışma atamaları</button>
       </> : role === 'parent' ? <>
         <button className="nav-item active" onClick={() => setNotice('Haftalık gelişim özeti açık.')}><LayoutDashboard size={18} /> Haftalık özet</button>
-        <button className="nav-item" onClick={() => setNotice('Deneme sonuçları örnek verilerle gösteriliyor.')}><ClipboardCheck size={18} /> Deneme sonuçları</button>
       </> : <>
         <button className="nav-item active" onClick={() => setNotice('Kurum görünümü açık.')}><LayoutDashboard size={18} /> Genel görünüm</button>
-        <button className="nav-item" onClick={() => setNotice('Online program modeli ürün keşfi aşamasında.')}><TrendingUp size={18} /> Dijital büyüme</button>
       </>}
       <div className="sidebar-bottom">
         <div className="sidebar-help"><div className="help-icon"><Sparkles size={17} /></div><strong>Her adım bir gelişim.</strong><p>Hedefini küçük adımlara böl, ilerlemeni takip et.</p><button onClick={() => { setRole('student'); setPage('practice'); }}>Çalışmaya başla <ArrowRight size={14} /></button></div>
