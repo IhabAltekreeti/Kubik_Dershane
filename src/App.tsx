@@ -93,6 +93,7 @@ export default function App() {
   const [chat, setChat] = useState<ChatMessage[]>([
     { role: 'assistant', text: 'Merhaba! Bugün birlikte üslü ifadeleri çalışabiliriz. Takıldığın yeri anlatırsan adım adım ilerleyelim.' }
   ]);
+  const [progressOverride, setProgressOverride] = useState<number | null>(null);
   const [notice, setNotice] = useState('');
   const [showRoleMenu, setShowRoleMenu] = useState(false);
 
@@ -108,9 +109,25 @@ export default function App() {
     : { name: 'Kerem Demir', grade: '8. sınıf', track: 'LGS' };
 
   const progress = useMemo(() => {
-    const base = track === 'LGS' ? 68 : 54;
-    return Math.min(100, base + (submitted && selectedAnswer === question.answer ? 4 : 0) + (retryDone ? 8 : 0));
-  }, [track, submitted, selectedAnswer, retryDone, question.answer]);
+    // Keep every role in sync with the server-side demo learning record.
+    return progressOverride ?? (track === 'LGS' ? 52 : 55);
+  }, [track, progressOverride]);
+
+  const loadProgress = async (nextTrack: Track) => {
+    const studentId = nextTrack === 'LGS' ? 'std_lgs_801' : 'std_yks_1101';
+    const topicId = nextTrack === 'LGS' ? 'top_lgs_uslu' : 'top_yks_fonk';
+    try {
+      const response = await fetch(`/api/student/progress?studentId=${studentId}&topicId=${topicId}`);
+      const data = await response.json();
+      if (response.ok && typeof data.progress?.currentMastery === 'number') {
+        setProgressOverride(data.progress.currentMastery);
+      } else {
+        setProgressOverride(null);
+      }
+    } catch {
+      setProgressOverride(null);
+    }
+  };
 
   const resetPractice = () => {
     setSelectedAnswer(null);
@@ -150,6 +167,7 @@ export default function App() {
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Yanıt kaydedilemedi.');
+        if (typeof data.updatedMastery?.currentMastery === 'number') setProgressOverride(data.updatedMastery.currentMastery);
         setNotice(data.isCorrect
           ? (data.isRepeatedAttempt ? 'Bu resmî örnek soru bu demo kaydında daha önce doğru çözülmüş. İlerleme tekrar sayılarak artırılmadı.' : 'Yanıt demo öğrenme kaydına işlendi.')
           : 'Yanıt demo öğrenme kaydına işlendi; yanlış yanıt öğretmen görünümünde takip edilebilir.');
@@ -234,7 +252,7 @@ export default function App() {
 
   const StudentOverview = () => (
     <>
-      <div className="welcome-row"><div><div className="eyebrow">11 EKİM PAZAR · BUGÜNÜN PLANI</div><h1>Merhaba, {student.name.split(' ')[0]} <span className="wave">✳</span></h1><p className="muted">Küçük bir adım, büyük bir ilerlemenin başlangıcı.</p></div><div className="track-toggle"><button className={track === 'LGS' ? 'selected' : ''} onClick={() => { setTrack('LGS'); setRetryMode(false); setRetryDone(false); setSelectedAnswer(null); setSubmitted(false); setChat([{ role: 'assistant', text: 'Merhaba! Bugün birlikte üslü ifadeleri çalışabiliriz. Takıldığın yeri anlatırsan adım adım ilerleyelim.' }]); setNotice('LGS demo öğrencisine geçildi.'); }}>LGS</button><button className={track === 'YKS' ? 'selected' : ''} onClick={() => { setTrack('YKS'); setRetryMode(false); setRetryDone(false); setSelectedAnswer(null); setSubmitted(false); setChat([{ role: 'assistant', text: 'Merhaba! Bugün birlikte fonksiyonları çalışabiliriz. Bir fonksiyonun değerini bulmak için verilen x değerini ifadede yerine koyarak başlayabiliriz.' }]); setNotice('YKS demo öğrencisine geçildi.'); }}>YKS</button></div></div>
+      <div className="welcome-row"><div><div className="eyebrow">11 EKİM PAZAR · BUGÜNÜN PLANI</div><h1>Merhaba, {student.name.split(' ')[0]} <span className="wave">✳</span></h1><p className="muted">Küçük bir adım, büyük bir ilerlemenin başlangıcı.</p></div><div className="track-toggle"><button className={track === 'LGS' ? 'selected' : ''} onClick={() => { setTrack('LGS'); void loadProgress('LGS'); setRetryMode(false); setRetryDone(false); setSelectedAnswer(null); setSubmitted(false); setChat([{ role: 'assistant', text: 'Merhaba! Bugün birlikte üslü ifadeleri çalışabiliriz. Takıldığın yeri anlatırsan adım adım ilerleyelim.' }]); setNotice('LGS demo öğrencisine geçildi.'); }}>LGS</button><button className={track === 'YKS' ? 'selected' : ''} onClick={() => { setTrack('YKS'); void loadProgress('YKS'); setRetryMode(false); setRetryDone(false); setSelectedAnswer(null); setSubmitted(false); setChat([{ role: 'assistant', text: 'Merhaba! Bugün birlikte fonksiyonları çalışabiliriz. Bir fonksiyonun değerini bulmak için verilen x değerini ifadede yerine koyarak başlayabiliriz.' }]); setNotice('YKS demo öğrencisine geçildi.'); }}>YKS</button></div></div>
       <section className="hero-card">
         <div className="hero-copy"><span className="pill pill-light"><Sparkles size={13} /> BUGÜNÜN ODAĞI</span><h2>{student.goal}</h2><p>Önce neyi bildiğini görelim. Sonra sana en çok yardımcı olacak adıma birlikte karar verelim.</p><button className="button button-white" onClick={resetPractice}>Çalışmaya devam et <ArrowRight size={16} /></button><div className="hero-meta"><span><Clock3 size={14} /> 12 dk</span><span><Target size={14} /> 3 küçük adım</span></div></div>
         <div className="hero-art"><div className="orbit orbit-one" /><div className="orbit orbit-two" /><div className="art-center"><BrainCircuit size={42} strokeWidth={1.5} /></div><div className="float-card float-top"><span className="float-icon"><CheckCircle2 size={16} /></span><span><strong>Öğrenme planı</strong><small>Sana göre şekillenir</small></span></div><div className="float-card float-bottom"><span className="mini-bars"><i /><i /><i /><i /><i /></span><span><strong>İlerleme</strong><small>{progress}% konu hâkimiyeti</small></span></div></div>
