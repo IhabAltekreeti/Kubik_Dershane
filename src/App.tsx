@@ -1,8 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
-import 'katex/dist/katex.min.css';
 import {
   Activity, ArrowRight, ArrowUpRight, BookOpen, BrainCircuit,
   CalendarDays, Check, CheckCircle2, ChevronDown, ChevronRight, CircleHelp,
@@ -10,17 +6,47 @@ import {
   Send, ShieldCheck, Sparkles, Target, Users, X
 } from 'lucide-react';
 
-type TutorMessageProps = { text: string };
+function formatMath(source: string): string {
+  const superscripts: Record<string, string> = {
+    '0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹',
+    'n':'ⁿ','m':'ᵐ','i':'ⁱ','+':'⁺','-':'⁻','(':'⁽',')':'⁾'
+  };
+  return source
+    .replace(/\\cdot/g, '·')
+    .replace(/\\times/g, '×')
+    .replace(/\\div/g, '÷')
+    .replace(/\\neq/g, '≠')
+    .replace(/\\leq/g, '≤')
+    .replace(/\\geq/g, '≥')
+    .replace(/\\infty/g, '∞')
+    .replace(/\\sqrt\{([^{}]+)\}/g, '√($1)')
+    .replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g, '$1⁄$2')
+    .replace(/\^(\{([^{}]+)\}|[A-Za-z0-9?+-])/g, (_match, whole, grouped) => {
+      const exponent = grouped ?? whole.slice(1);
+      if (exponent === '?') return '⁽?⁾';
+      return [...exponent].map(char => superscripts[char] ?? char).join('');
+    });
+}
 
-// Render Markdown and LaTeX safely as formatted educational content.
-function TutorMessage({ text }: TutorMessageProps) {
-  const slash = String.fromCharCode(92);
-  const normalized = text
-    .split(slash + '(').join('$')
-    .split(slash + ')').join('$')
-    .split(slash + '[').join('$$')
-    .split(slash + ']').join('$$');
-  return <div className="tutor-rich-text"><ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>{normalized}</ReactMarkdown></div>;
+function renderPlainText(text: string) {
+  return text.split(/(\*\*[^*]+\*\*|\n)/g).map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={index}>{part.slice(2, -2)}</strong>;
+    }
+    if (part === '\n') return <br key={index} />;
+    return part;
+  });
+}
+
+// Render common LaTeX notation as readable mathematical typography without exposing markup.
+function TutorMessage({ text }: { text: string }) {
+  const chunks = text.split(/(\$[^$\n]+\$)/g);
+  return <div className="tutor-rich-text">{chunks.map((chunk, index) => {
+    if (chunk.startsWith('$') && chunk.endsWith('$') && chunk.length > 2) {
+      return <span className="math-inline" key={index}>{formatMath(chunk.slice(1, -1))}</span>;
+    }
+    return <span key={index}>{renderPlainText(chunk)}</span>;
+  })}</div>;
 }
 
 type Track = 'LGS' | 'YKS';
