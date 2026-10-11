@@ -121,6 +121,54 @@ PEDAGOJİK KURALLAR:
       };
     }
   }
+
+  /**
+   * General subject tutoring for tracks without verified official question content.
+   * This mode must not claim that its examples or explanations are official exam material.
+   */
+  public async getGeneralTutorReply(
+    student: ServerStudentProfile,
+    chatHistory: ChatMessage[],
+    userMessage: string
+  ): Promise<TutorResponse> {
+    const ai = this.getClient();
+    if (!ai) {
+      return {
+        message: '',
+        error: 'Sunucuda GEMINI_API_KEY tanımlı değil veya eksik. Lütfen geçerli bir Gemini API anahtarı ekleyin.',
+        isRecoverable: true
+      };
+    }
+
+    const systemInstruction = `Sen Kübik için hazırlanmış bir eğitim demosunda ${student.grade} . sınıf ${student.track} öğrencisine Matematik konusunda yardımcı olan bir öğrenme rehberisin.
+Öğrenci adı: ${student.name}.
+Konu: ${student.currentTopic}.
+Bu parkur için doğrulanmış resmî soru içeriği henüz bağlı değil. Bu yüzden örnekleri resmî MEB/YKS sorusu olarak tanıtma, kaynak veya cevap anahtarı uydurma.
+Türkçe, yaşa uygun ve anlaşılır anlat. Öğrenciye bir seferde tek bir küçük düşünme adımı ver; gerektiğinde basit bir örnek üret ve bunun açıklama amaçlı kendi örneğin olduğunu belirt. Emin değilsen açıkça söyle ve öğretmene danışmasını öner.`;
+
+    try {
+      const recentTurns = chatHistory.slice(-6);
+      const conversationContext = recentTurns
+        .map(msg => `${msg.role === 'user' ? 'Öğrenci' : 'Rehber'}: ${msg.content}`)
+        .join('\\n');
+      const fullPrompt = conversationContext
+        ? `${conversationContext}\\nÖğrenci: ${userMessage}\\nRehber:`
+        : `Öğrenci: ${userMessage}\\nRehber:`;
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: fullPrompt,
+        config: { systemInstruction, temperature: 0.5 }
+      });
+      return { message: response.text || 'Yanıt oluşturulamadı. Lütfen tekrar deneyin.' };
+    } catch (err: any) {
+      console.error('Gemini general tutor request failed:', err);
+      return {
+        message: '',
+        error: `Gemini API çağrısı başarısız oldu: ${err?.message || 'Bilinmeyen bir hata oluştu.'}`,
+        isRecoverable: true
+      };
+    }
+  }
 }
 
 export const geminiTutorService = new GeminiTutorService();
