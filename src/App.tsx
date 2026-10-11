@@ -81,12 +81,13 @@ export default function App() {
   const progress = useMemo(() => {
     const base = track === 'LGS' ? 68 : 54;
     return Math.min(100, base + (submitted && selectedAnswer === question.answer ? 4 : 0) + (retryDone ? 8 : 0));
-  }, [track, submitted, selectedAnswer, retryDone]);
+  }, [track, submitted, selectedAnswer, retryDone, question.answer]);
 
   const resetPractice = () => {
     setSelectedAnswer(null);
     setSubmitted(false);
     setRetryDone(false);
+    setRetryMode(false);
     setPage('practice');
   };
 
