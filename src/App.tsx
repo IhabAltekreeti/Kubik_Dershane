@@ -62,7 +62,8 @@ export default function App() {
   const [page, setPage] = useState<'overview' | 'practice' | 'tutor' | 'progress'>('overview');
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [submitted, setSubmitted] = useState(false);
-  const [retryDone, setRetryDone] = useState(false);\n  const [retryMode, setRetryMode] = useState(false);
+  const [retryDone, setRetryDone] = useState(false);
+  const [retryMode, setRetryMode] = useState(false);
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
   const [chat, setChat] = useState<ChatMessage[]>([
@@ -100,7 +101,8 @@ export default function App() {
 
   const submitAnswer = () => {
     if (selectedAnswer === null) return;
-    setSubmitted(true);\n    if (retryMode && selectedAnswer === question.answer) setRetryDone(true);
+    setSubmitted(true);
+    if (retryMode && selectedAnswer === question.answer) setRetryDone(true);
   };
 
   const sendTutorMessage = async () => {
