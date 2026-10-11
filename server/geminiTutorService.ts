@@ -102,7 +102,6 @@ PEDAGOJİK KURALLAR:
         contents: fullPrompt,
         config: {
           systemInstruction,
-          temperature: 0.5,
         }
       });
 
