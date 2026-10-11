@@ -150,10 +150,10 @@ Türkçe, yaşa uygun ve anlaşılır anlat. Öğrenciye bir seferde tek bir kü
       const recentTurns = chatHistory.slice(-6);
       const conversationContext = recentTurns
         .map(msg => `${msg.role === 'user' ? 'Öğrenci' : 'Rehber'}: ${msg.content}`)
-        .join('\\n');
+        .join('\n');
       const fullPrompt = conversationContext
-        ? `${conversationContext}\\nÖğrenci: ${userMessage}\\nRehber:`
-        : `Öğrenci: ${userMessage}\\nRehber:`;
+        ? `${conversationContext}\nÖğrenci: ${userMessage}\nRehber:`
+        : `Öğrenci: ${userMessage}\nRehber:`;
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: fullPrompt,
