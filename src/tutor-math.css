@@ -1,0 +1,4 @@
+.tutor-rich-text{line-height:1.8;overflow-wrap:anywhere}
+.tutor-rich-text p{margin:0 0 9px}
+.tutor-rich-text p:last-child{margin-bottom:0}
+.tutor-rich-text .katex-display{overflow-x:auto;overflow-y:hidden;margin:9px 0;text-align:left}
