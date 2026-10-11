@@ -12,11 +12,18 @@ import {
 
 type TutorMessageProps = { text: string };
 
-// Render tutor Markdown and LaTeX as readable formatted content, never raw HTML.
+// Render Markdown and LaTeX safely as formatted educational content.
 function TutorMessage({ text }: TutorMessageProps) {
+  const slash = String.fromCharCode(92);
   const normalized = text
-    .replace(/\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\/g, '\\\\')
-    .replace(/\\\\\\(/g, () => '
+    .split(slash + '(').join('$')
+    .split(slash + ')').join('$')
+    .split(slash + '[').join('$$')
+    .split(slash + ']').join('$$');
+  return <div className="tutor-rich-text"><ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>{normalized}</ReactMarkdown></div>;
+}
+
+type Track = 'LGS' | 'YKS';
 type Role = 'student' | 'teacher' | 'parent' | 'center';
 type View = 'today' | 'practice' | 'coach' | 'progress';
 type ChatItem = { role: 'user' | 'assistant'; text: string };
