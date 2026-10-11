@@ -10,13 +10,43 @@ type Role = 'student' | 'teacher' | 'parent' | 'management';
 type Track = 'LGS' | 'YKS';
 type ChatMessage = { role: 'assistant' | 'user'; text: string };
 
-const initialQuestion = {
-  title: 'Üslü ifadeler',
-  prompt: 'Bir sayının kendisiyle 4 kez çarpımı aşağıdakilerden hangisiyle gösterilir?',
-  options: ['4 × a', 'a⁴', 'a + 4', 'a ÷ 4'],
-  answer: 1,
-  explanation: 'Bir sayının kendisiyle çarpımı üslü ifade ile gösterilir. a sayısı 4 kez çarpılıyorsa a × a × a × a = a⁴ olur.',
-  source: 'Demo için hazırlanmış örnek soru · Resmî sınav sorusu değildir'
+const questionBank = {
+  LGS: [
+    {
+      title: 'Üslü ifadeler',
+      prompt: 'Bir sayının kendisiyle 4 kez çarpımı aşağıdakilerden hangisiyle gösterilir?',
+      options: ['4 × a', 'a⁴', 'a + 4', 'a ÷ 4'],
+      answer: 1,
+      explanation: 'Bir sayının kendisiyle çarpımı üslü ifade ile gösterilir. a sayısı 4 kez çarpılıyorsa a × a × a × a = a⁴ olur.',
+      source: 'Demo için hazırlanmış örnek soru · Resmî sınav sorusu değildir'
+    },
+    {
+      title: 'Üslü ifadeler · tekrar',
+      prompt: '3² + 2 işleminin sonucu kaçtır?',
+      options: ['8', '9', '11', '18'],
+      answer: 2,
+      explanation: 'Önce üslü işlem yapılır: 3² = 3 × 3 = 9. Ardından 2 eklenir ve sonuç 11 olur.',
+      source: 'Demo için hazırlanmış tekrar sorusu · Resmî sınav sorusu değildir'
+    }
+  ],
+  YKS: [
+    {
+      title: 'Fonksiyonlar',
+      prompt: 'f(x) = 2x + 1 olduğuna göre f(3) kaçtır?',
+      options: ['5', '6', '7', '8'],
+      answer: 2,
+      explanation: 'f(3) değerini bulmak için x yerine 3 yazarız: f(3) = 2 × 3 + 1 = 7.',
+      source: 'Demo için hazırlanmış örnek soru · Resmî sınav sorusu değildir'
+    },
+    {
+      title: 'Fonksiyonlar · tekrar',
+      prompt: 'g(x) = x² − 1 ise g(2) kaçtır?',
+      options: ['2', '3', '4', '5'],
+      answer: 1,
+      explanation: 'x yerine 2 yazılır: g(2) = 2² − 1 = 4 − 1 = 3.',
+      source: 'Demo için hazırlanmış tekrar sorusu · Resmî sınav sorusu değildir'
+    }
+  ]
 };
 
 const roleNames: Record<Role, string> = {
@@ -32,7 +62,7 @@ export default function App() {
   const [page, setPage] = useState<'overview' | 'practice' | 'tutor' | 'progress'>('overview');
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [submitted, setSubmitted] = useState(false);
-  const [retryDone, setRetryDone] = useState(false);
+  const [retryDone, setRetryDone] = useState(false);\n  const [retryMode, setRetryMode] = useState(false);
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
   const [chat, setChat] = useState<ChatMessage[]>([
@@ -41,13 +71,13 @@ export default function App() {
   const [notice, setNotice] = useState('');
   const [showRoleMenu, setShowRoleMenu] = useState(false);
 
-  const student = track === 'LGS'
+  const question = questionBank[track][retryMode ? 1 : 0];\n\n  const student = track === 'LGS'
     ? { name: 'Kerem Yılmaz', grade: '8. sınıf', exam: 'LGS hazırlık', initials: 'KY', goal: 'Üslü ifadeleri pekiştirmek' }
     : { name: 'Selin Demir', grade: '11. sınıf', exam: 'YKS hazırlık', initials: 'SD', goal: 'Fonksiyonlarda temel kavramlar' };
 
   const progress = useMemo(() => {
     const base = track === 'LGS' ? 68 : 54;
-    return Math.min(100, base + (submitted && selectedAnswer === initialQuestion.answer ? 4 : 0) + (retryDone ? 8 : 0));
+    return Math.min(100, base + (submitted && selectedAnswer === question.answer ? 4 : 0) + (retryDone ? 8 : 0));
   }, [track, submitted, selectedAnswer, retryDone]);
 
   const resetPractice = () => {
@@ -66,7 +96,7 @@ export default function App() {
 
   const submitAnswer = () => {
     if (selectedAnswer === null) return;
-    setSubmitted(true);
+    setSubmitted(true);\n    if (retryMode && selectedAnswer === question.answer) setRetryDone(true);
   };
 
   const sendTutorMessage = async () => {
@@ -148,7 +178,7 @@ export default function App() {
 
   const StudentOverview = () => (
     <>
-      <div className="welcome-row"><div><div className="eyebrow">11 EKİM PAZAR · BUGÜNÜN PLANI</div><h1>Merhaba, {student.name.split(' ')[0]} <span className="wave">✳</span></h1><p className="muted">Küçük bir adım, büyük bir ilerlemenin başlangıcı.</p></div><div className="track-toggle"><button className={track === 'LGS' ? 'selected' : ''} onClick={() => { setTrack('LGS'); setNotice('LGS demo öğrencisine geçildi.'); }}>LGS</button><button className={track === 'YKS' ? 'selected' : ''} onClick={() => { setTrack('YKS'); setNotice('YKS demo öğrencisine geçildi.'); }}>YKS</button></div></div>
+      <div className="welcome-row"><div><div className="eyebrow">11 EKİM PAZAR · BUGÜNÜN PLANI</div><h1>Merhaba, {student.name.split(' ')[0]} <span className="wave">✳</span></h1><p className="muted">Küçük bir adım, büyük bir ilerlemenin başlangıcı.</p></div><div className="track-toggle"><button className={track === 'LGS' ? 'selected' : ''} onClick={() => { setTrack('LGS'); setRetryMode(false); setSelectedAnswer(null); setSubmitted(false); setNotice('LGS demo öğrencisine geçildi.'); }}>LGS</button><button className={track === 'YKS' ? 'selected' : ''} onClick={() => { setTrack('YKS'); setRetryMode(false); setSelectedAnswer(null); setSubmitted(false); setNotice('YKS demo öğrencisine geçildi.'); }}>YKS</button></div></div>
       <section className="hero-card">
         <div className="hero-copy"><span className="pill pill-light"><Sparkles size={13} /> BUGÜNÜN ODAĞI</span><h2>{student.goal}</h2><p>Önce neyi bildiğini görelim. Sonra sana en çok yardımcı olacak adıma birlikte karar verelim.</p><button className="button button-white" onClick={resetPractice}>Çalışmaya devam et <ArrowRight size={16} /></button><div className="hero-meta"><span><Clock3 size={14} /> 12 dk</span><span><Target size={14} /> 3 küçük adım</span></div></div>
         <div className="hero-art"><div className="orbit orbit-one" /><div className="orbit orbit-two" /><div className="art-center"><BrainCircuit size={42} strokeWidth={1.5} /></div><div className="float-card float-top"><span className="float-icon"><CheckCircle2 size={16} /></span><span><strong>Öğrenme planı</strong><small>Sana göre şekillenir</small></span></div><div className="float-card float-bottom"><span className="mini-bars"><i /><i /><i /><i /><i /></span><span><strong>İlerleme</strong><small>{progress}% konu hâkimiyeti</small></span></div></div>
